@@ -22,6 +22,7 @@ data CommitInfo = CommitInfo
   { getMessage :: String
   , getDate :: String
   , getHash :: String
+  , getParentHash :: String
   } deriving (Show, Read)
 
 hagitDir :: FilePath -> FilePath
@@ -37,7 +38,11 @@ headPath :: FilePath -> FilePath
 headPath dir = hagitDir dir </> "HEAD"
 
 readCommitHead :: FilePath -> IO String
-readCommitHead base = withFile (headPath base) ReadMode hGetLine
+readCommitHead base = do
+  fileExist <- doesFileExist $ headPath base
+  if not fileExist
+    then return ""
+    else withFile (headPath base) ReadMode hGetLine
 
 -- | Updates the HEAD file with specified commit    
 storeCommitHead :: FilePath -> String -> IO ()

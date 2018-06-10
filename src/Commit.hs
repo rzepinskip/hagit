@@ -48,8 +48,8 @@ storeCommit :: FilePath -> String -> DirTree HashContents -> IO String
 storeCommit base msg tree = do
   let hashesTree = removeByteStrings tree
   let commitHash = treeHash hashesTree
-  storeCommitHead base commitHash
   storeCommitData base msg commitHash hashesTree
+  storeCommitHead base commitHash
   return commitHash
 
 -- | Stores commit information
@@ -57,5 +57,6 @@ storeCommitData :: FilePath -> String -> String -> DirTree String -> IO ()
 storeCommitData base msg hash hashesTree = do
   withFile (commitsDir base </> hash) WriteMode $ \file -> do
     date <- getCurrentTime
-    hPutStrLn file (show $ CommitInfo msg (show date) hash)
+    parentHash <- readCommitHead "."
+    hPutStrLn file (show $ CommitInfo msg (show date) hash parentHash)
     hPutStrLn file (show hashesTree)

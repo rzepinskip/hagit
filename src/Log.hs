@@ -19,8 +19,9 @@ execLog :: FilePath -> IO ()
 execLog dir = do
   paths <- getCommitPaths dir
   sortedCommits <- loadSortedCommits paths
-  forM_ sortedCommits $ \(CommitInfo msg date hash) -> do
+  forM_ sortedCommits $ \(CommitInfo msg date hash parentHash) -> do
     putStrLn $ "commit " ++ hash
+    putStrLn $ ">>= parentHash: " ++ parentHash
     putStrLn $ ">>= date: " ++ date
     putStrLn $ ">>= message: " ++ msg
     putStrLn ""
@@ -35,7 +36,8 @@ loadSortedCommits :: [FilePath] -> IO [CommitInfo]
 loadSortedCommits paths = do
   summaries <- forM paths loadCommitInfo
   return $
-    reverse $ sortOn (\(CommitInfo _ date _) -> read date :: UTCTime) summaries
+    reverse $
+    sortOn (\(CommitInfo _ date _ _) -> read date :: UTCTime) summaries
 
 loadCommitInfo :: FilePath -> IO CommitInfo
 loadCommitInfo path = withFile path ReadMode (fmap read . hGetLine)
