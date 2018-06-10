@@ -1,28 +1,19 @@
-module Checkout (checkoutHvc) where
+module Checkout
+  ( checkoutHvc
+  ) where
 
-import qualified Data.ByteString.Lazy as Lazy
-import System.FilePath ((</>), takeDirectory)
-import System.Directory (doesFileExist, createDirectoryIfMissing)
-import Control.Monad (forM, forM_)
 import Codec.Compression.GZip
+import Control.Monad (forM, forM_)
+import qualified Data.ByteString.Lazy as Lazy
+import System.Directory (createDirectoryIfMissing, doesFileExist)
+import System.FilePath ((</>), takeDirectory)
 
 import DirTreeUtils
 import Utils
 
-objectsExist :: String -> [String] -> IO Bool
-objectsExist dir hashes = do
-  filesExist <- forM hashes $ \hash -> doesFileExist $ dir </> hash
-  return $ and filesExist
-
-restoreObject :: String -> (FilePath, String) -> IO ()
-restoreObject dir (filepath, hash) = do
-  let targetPath = dir </> filepath
-  compressedContents <- Lazy.readFile (objectsDir dir </> hash)
-  createDirectoryIfMissing True (takeDirectory targetPath)
-  Lazy.writeFile targetPath (decompress compressedContents)
-
-restoreObjects :: String -> [(FilePath, String)] -> IO ()
-restoreObjects dir objs = forM_ objs (restoreObject dir)
+-- | Checkouts commit with specified hash to particular directory
+checkoutHvc :: FilePath -> String -> IO ()
+checkoutHvc dir hash = execIfHvc dir (execCheckout dir hash)
 
 execCheckout :: FilePath -> String -> IO ()
 execCheckout dir hash = do
@@ -40,6 +31,18 @@ execCheckout dir hash = do
         else putStrLn "Checkout: unable to checkout commit: missing objects."
     else putStrLn "Checkout: unable to checkout commit: commit not found."
 
+objectsExist :: String -> [String] -> IO Bool
+objectsExist dir hashes = do
+  filesExist <- forM hashes $ \hash -> doesFileExist $ dir </> hash
+  return $ and filesExist
 
-checkoutHvc :: FilePath -> String -> IO ()
-checkoutHvc dir hash = execIfHvc dir (execCheckout dir hash)
+restoreObjects :: String -> [(FilePath, String)] -> IO ()
+restoreObjects dir objs = forM_ objs (restoreObject dir)
+
+-- | Reads and restores specified object
+restoreObject :: String -> (FilePath, String) -> IO ()
+restoreObject dir (filepath, hash) = do
+  let targetPath = dir </> filepath
+  compressedContents <- Lazy.readFile (objectsDir dir </> hash)
+  createDirectoryIfMissing True (takeDirectory targetPath)
+  Lazy.writeFile targetPath (decompress compressedContents)

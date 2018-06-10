@@ -8,6 +8,7 @@ import Commit (storeCommit)
 import DirTreeUtils (hcEmptyTreeDir)
 import Utils
 
+-- | Initializes hagit repository in specified directory
 initHvc :: FilePath -> IO ()
 initHvc dir = do
   exists <- doesDirectoryExist $ hagitDir dir

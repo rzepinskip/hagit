@@ -11,8 +11,19 @@ import System.IO (IOMode(..), hGetLine, withFile)
 
 import Utils
 
-loadCommitSummary :: FilePath -> IO CommitSummary
-loadCommitSummary path = withFile path ReadMode (fmap read . hGetLine)
+-- | Prints log - list of all commits of the repository in specified directory
+logHvc :: FilePath -> IO ()
+logHvc dir = execIfHvc dir (execLog dir)
+
+execLog :: FilePath -> IO ()
+execLog dir = do
+  paths <- getCommitPaths dir
+  sortedCommits <- loadSortedCommits paths
+  forM_ sortedCommits $ \(CommitSummary msg date hash) -> do
+    putStrLn $ "commit " ++ hash
+    putStrLn $ ">>= date: " ++ date
+    putStrLn $ ">>= message: " ++ msg
+    putStrLn ""
 
 getCommitPaths :: FilePath -> IO [FilePath]
 getCommitPaths dir = do
@@ -27,15 +38,5 @@ loadSortedCommits paths = do
     reverse $
     sortOn (\(CommitSummary _ date _) -> read date :: UTCTime) summaries
 
-execLog :: FilePath -> IO ()
-execLog dir = do
-  paths <- getCommitPaths dir
-  sortedCommits <- loadSortedCommits paths
-  forM_ sortedCommits $ \(CommitSummary msg date hash) -> do
-    putStrLn $ "commit " ++ hash
-    putStrLn $ ">>= date: " ++ date
-    putStrLn $ ">>= message: " ++ msg
-    putStrLn ""
-
-logHvc :: FilePath -> IO ()
-logHvc dir = execIfHvc dir (execLog dir)
+loadCommitSummary :: FilePath -> IO CommitSummary
+loadCommitSummary path = withFile path ReadMode (fmap read . hGetLine)

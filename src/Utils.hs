@@ -4,8 +4,8 @@ module Utils
   , objectsDir
   , headPath
   , printHvcDirError
-  , storeCommitHead
   , readCommitHead
+  , storeCommitHead
   , execIfHvc
   , loadCommit
   , CommitSummary(..)
@@ -36,12 +36,13 @@ objectsDir dir = hagitDir dir </> "objects"
 headPath :: FilePath -> FilePath
 headPath dir = hagitDir dir </> "HEAD"
 
+readCommitHead :: FilePath -> IO String
+readCommitHead base = withFile (headPath base) ReadMode hGetLine
+
+-- | Updates the HEAD file with specified commit    
 storeCommitHead :: FilePath -> String -> IO ()
 storeCommitHead base hash =
   withFile (headPath base) WriteMode (`hPutStrLn` hash)
-
-readCommitHead :: FilePath -> IO String
-readCommitHead base = withFile (headPath base) ReadMode hGetLine
 
 loadCommit :: FilePath -> IO (DirTree String)
 loadCommit path = do

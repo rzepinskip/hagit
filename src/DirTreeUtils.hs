@@ -33,14 +33,13 @@ removeByteStrings :: DirTree HashContents -> DirTree String
 removeByteStrings = foldDirTree DirNode id (\p hc -> FileNode p (hcHash hc))
 
 treeHash :: DirTree String -> String
-treeHash tree =
-  bstrToHex $ bstrSHA1 (foldr Strict.append Strict.empty pairHashes)
+treeHash tree = bsToHex $ hashBS (foldr Strict.append Strict.empty pairHashes)
   where
     pairHashes =
       foldDirTree
         (\_ x -> x)
         concat
-        (\p h -> [strSHA1 (h ++ bstrToHex (strSHA1 p))])
+        (\p h -> [hashString (h ++ bsToHex (hashString p))])
         tree
 
 extrasFromTree :: DirTree a -> [a]
@@ -63,7 +62,7 @@ treeFromDir dir = makeTreeRelative dir <$> treeFromDirAbs dir
 loadFileData :: FilePath -> IO HashContents
 loadFileData path = do
   contents <- Lazy.readFile path
-  let hash = bstrToHex $ lbstrSHA1 contents
+  let hash = bsToHex $ hashLazyBS contents
   return (hash, contents)
 
 treeFromDirAbs :: FilePath -> IO (DirTree HashContents)
