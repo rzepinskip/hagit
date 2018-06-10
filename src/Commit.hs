@@ -1,5 +1,5 @@
 module Commit
-  ( commitHvc
+  ( commitCommand
   , storeCommit
   ) where
 
@@ -16,8 +16,8 @@ import DirTreeUtils
 import Utils
 
 -- | Commits all files in directory with specified message.
-commitHvc :: FilePath -> String -> IO ()
-commitHvc dir msg = execIfHvc dir (execCommit dir msg)
+commitCommand :: FilePath -> String -> IO ()
+commitCommand dir msg = execIfStore dir (execCommit dir msg)
 
 execCommit :: FilePath -> String -> IO ()
 execCommit dir msg = do
@@ -57,5 +57,5 @@ storeCommitData :: FilePath -> String -> String -> DirTree String -> IO ()
 storeCommitData base msg hash hashesTree = do
   withFile (commitsDir base </> hash) WriteMode $ \file -> do
     date <- getCurrentTime
-    hPutStrLn file (show $ CommitSummary msg (show date) hash)
+    hPutStrLn file (show $ CommitInfo msg (show date) hash)
     hPutStrLn file (show hashesTree)

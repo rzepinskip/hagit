@@ -1,5 +1,5 @@
 module Checkout
-  ( checkoutHvc
+  ( checkoutCommand
   ) where
 
 import Codec.Compression.GZip
@@ -12,8 +12,8 @@ import DirTreeUtils
 import Utils
 
 -- | Checkouts commit with specified hash to particular directory
-checkoutHvc :: FilePath -> String -> IO ()
-checkoutHvc dir hash = execIfHvc dir (execCheckout dir hash)
+checkoutCommand :: FilePath -> String -> IO ()
+checkoutCommand dir hash = execIfStore dir (execCheckout dir hash)
 
 execCheckout :: FilePath -> String -> IO ()
 execCheckout dir hash = do

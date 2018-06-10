@@ -20,11 +20,11 @@ runAction (HvcError e) = printError e
 runAction (HvcOperation op) = runOperation op
 
 runOperation :: HvcOperationType -> IO ()
-runOperation (Init dir) = initHvc dir
-runOperation (Commit dir msg) = commitHvc dir msg
-runOperation (Log dir) = logHvc dir
-runOperation (Checkout dir commit) = checkoutHvc dir commit
-runOperation (Status dir) = statusHvc dir
+runOperation (Init dir) = initCommand dir
+runOperation (Commit dir msg) = commitCommand dir msg
+runOperation (Log dir) = logCommand dir
+runOperation (Checkout dir commit) = checkoutCommand dir commit
+runOperation (Status dir) = statusCommand dir
 runOperation Help = printHelp
 
 printError :: HvcErrorType -> IO ()

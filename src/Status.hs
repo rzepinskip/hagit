@@ -1,5 +1,5 @@
 module Status
-  ( statusHvc
+  ( statusCommand
   ) where
 
 import qualified Data.Map.Strict as Map
@@ -10,8 +10,8 @@ import DirTreeUtils
 import Utils
 
 -- | Prints status of current repository - new/modified/deleted files in comparison to latest commit
-statusHvc :: FilePath -> IO ()
-statusHvc dir = execIfHvc dir (execStatus dir)
+statusCommand :: FilePath -> IO ()
+statusCommand dir = execIfStore dir (execStatus dir)
 
 execStatus :: FilePath -> IO ()
 execStatus dir = do

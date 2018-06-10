@@ -1,5 +1,5 @@
 module Init
-  ( initHvc
+  ( initCommand
   ) where
 
 import System.Directory (createDirectoryIfMissing, doesDirectoryExist)
@@ -9,8 +9,8 @@ import DirTreeUtils (hcEmptyTreeDir)
 import Utils
 
 -- | Initializes hagit repository in specified directory
-initHvc :: FilePath -> IO ()
-initHvc dir = do
+initCommand :: FilePath -> IO ()
+initCommand dir = do
   exists <- doesDirectoryExist $ hagitDir dir
   if exists
     then putStrLn "Directory is already initialized."

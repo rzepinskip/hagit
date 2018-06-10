@@ -3,12 +3,12 @@ module Utils
   , commitsDir
   , objectsDir
   , headPath
-  , printHvcDirError
+  , printStoreDirError
   , readCommitHead
   , storeCommitHead
-  , execIfHvc
+  , execIfStore
   , loadCommit
-  , CommitSummary(..)
+  , CommitInfo(..)
   ) where
 
 import Control.Monad (forM)
@@ -18,11 +18,11 @@ import System.IO (IOMode(..), hGetLine, hPutStrLn, withFile)
 
 import DirTree
 
-data CommitSummary =
-  CommitSummary String
-                String
-                String
-  deriving (Show, Read)
+data CommitInfo = CommitInfo
+  { getMessage :: String
+  , getDate :: String
+  , getHash :: String
+  } deriving (Show, Read)
 
 hagitDir :: FilePath -> FilePath
 hagitDir dir = combine dir ".hagit"
@@ -50,21 +50,21 @@ loadCommit path = do
   let line = lines contents !! 1
   return $ read line
 
-printHvcDirError :: IO ()
-printHvcDirError =
+printStoreDirError :: IO ()
+printStoreDirError =
   putStrLn "Unable to perform operation: hagit directory (.hagit) not found."
 
-hasHvcDir :: FilePath -> IO Bool
-hasHvcDir dir = do
+hasStoreDir :: FilePath -> IO Bool
+hasStoreDir dir = do
   let dirList =
         [hagitDir dir, hagitDir dir </> "commits", hagitDir dir </> "objects"]
   dirsExist <- forM dirList doesDirectoryExist
   headExists <- doesFileExist $ hagitDir dir </> "HEAD"
   return (and $ headExists : dirsExist)
 
-execIfHvc :: FilePath -> IO () -> IO ()
-execIfHvc dir comp = do
-  hagitEnabled <- hasHvcDir dir
+execIfStore :: FilePath -> IO () -> IO ()
+execIfStore dir comp = do
+  hagitEnabled <- hasStoreDir dir
   if hagitEnabled
     then comp
-    else printHvcDirError
+    else printStoreDirError
