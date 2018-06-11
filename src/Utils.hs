@@ -1,5 +1,6 @@
 module Utils
-  ( hagitDir
+  ( workingDir
+  , hagitDir
   , commitsDir
   , objectsDir
   , headPath
@@ -25,29 +26,31 @@ data CommitInfo = CommitInfo
   , getParentHash :: String
   } deriving (Show, Read)
 
-hagitDir :: FilePath -> FilePath
-hagitDir dir = combine dir ".hagit"
+workingDir :: FilePath
+workingDir = "."
 
-commitsDir :: FilePath -> FilePath
-commitsDir dir = hagitDir dir </> "commits"
+hagitDir :: FilePath
+hagitDir = combine workingDir ".hagit"
 
-objectsDir :: FilePath -> FilePath
-objectsDir dir = hagitDir dir </> "objects"
+commitsDir :: FilePath
+commitsDir = hagitDir </> "commits"
 
-headPath :: FilePath -> FilePath
-headPath dir = hagitDir dir </> "HEAD"
+objectsDir :: FilePath
+objectsDir = hagitDir </> "objects"
 
-readCommitHead :: FilePath -> IO String
-readCommitHead base = do
-  fileExist <- doesFileExist $ headPath base
+headPath :: FilePath
+headPath = hagitDir </> "HEAD"
+
+readCommitHead :: IO String
+readCommitHead = do
+  fileExist <- doesFileExist headPath
   if not fileExist
     then return ""
-    else withFile (headPath base) ReadMode hGetLine
+    else withFile headPath ReadMode hGetLine
 
 -- | Updates the HEAD file with specified commit    
-storeCommitHead :: FilePath -> String -> IO ()
-storeCommitHead base hash =
-  withFile (headPath base) WriteMode (`hPutStrLn` hash)
+storeCommitHead :: String -> IO ()
+storeCommitHead hash = withFile headPath WriteMode (`hPutStrLn` hash)
 
 loadCommit :: FilePath -> IO (DirTree String)
 loadCommit path = do
@@ -59,17 +62,16 @@ printStoreDirError :: IO ()
 printStoreDirError =
   putStrLn "Unable to perform operation: hagit directory (.hagit) not found."
 
-hasStoreDir :: FilePath -> IO Bool
-hasStoreDir dir = do
-  let dirList =
-        [hagitDir dir, hagitDir dir </> "commits", hagitDir dir </> "objects"]
+hasStoreDir :: IO Bool
+hasStoreDir = do
+  let dirList = [hagitDir, hagitDir </> "commits", hagitDir </> "objects"]
   dirsExist <- forM dirList doesDirectoryExist
-  headExists <- doesFileExist $ hagitDir dir </> "HEAD"
+  headExists <- doesFileExist $ hagitDir </> "HEAD"
   return (and $ headExists : dirsExist)
 
-execIfStore :: FilePath -> IO () -> IO ()
-execIfStore dir comp = do
-  hagitEnabled <- hasStoreDir dir
+execIfStore :: IO () -> IO ()
+execIfStore comp = do
+  hagitEnabled <- hasStoreDir
   if hagitEnabled
     then comp
     else printStoreDirError

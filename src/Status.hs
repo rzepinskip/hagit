@@ -10,16 +10,16 @@ import DirTreeUtils
 import Utils
 
 -- | Prints status of current repository - new/modified/deleted files in comparison to latest commit
-statusCommand :: FilePath -> IO ()
-statusCommand dir = execIfStore dir (execStatus dir)
+statusCommand :: IO ()
+statusCommand = execIfStore execStatus
 
-execStatus :: FilePath -> IO ()
-execStatus dir = do
-  currentTree <- treeFromDir dir
-  commitHead <- readCommitHead dir
+execStatus :: IO ()
+execStatus = do
+  currentTree <- treeFromDir workingDir
+  commitHead <- readCommitHead
   let currentTreeHashes = removeByteStrings currentTree
   putStrLn $ "Status: commit HEAD is: " ++ commitHead
-  let commitPath = commitsDir dir </> commitHead
+  let commitPath = commitsDir </> commitHead
   commitedTree <- loadCommit commitPath
   let cmpLines = compareTrees currentTreeHashes commitedTree
   putStrLn $

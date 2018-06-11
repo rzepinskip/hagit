@@ -20,18 +20,18 @@ runAction (HvcError e) = printError e
 runAction (HvcOperation op) = runOperation op
 
 runOperation :: HvcOperationType -> IO ()
-runOperation (Init dir) = initCommand dir
-runOperation (Commit dir msg) = commitCommand dir msg
-runOperation (Log dir) = logCommand dir
-runOperation (Checkout dir commit) = checkoutCommand dir commit
-runOperation (Status dir) = statusCommand dir
+runOperation Init = initCommand
+runOperation (Commit msg) = commitCommand msg
+runOperation Log = logCommand
+runOperation (Checkout commit) = checkoutCommand commit
+runOperation Status = statusCommand
 runOperation Help = printHelp
 
 printError :: HvcErrorType -> IO ()
-printError (DirError dir) = putStrLn $ "Invalid directory: " ++ dir
+printError _ = putStrLn "There was an error"
 
 printHelp :: IO ()
 printHelp = do
-  putStrLn "Usage: hagit <directory> <operation> [options]"
+  putStrLn "Usage: hagit <operation> [options]"
   putStrLn "Valid operations are: init, commit, checkout, log, status, help"
   putStrLn "See README.md for more details."

@@ -1,52 +1,59 @@
 module Args
-       (HvcArgsResult(..)
-       ,HvcErrorType(..)
-       ,HvcOperationType(..)
-       ,parseArgs) where
+  ( HvcArgsResult(..)
+  , HvcErrorType(..)
+  , HvcOperationType(..)
+  , parseArgs
+  ) where
 
 import System.Directory
+import Utils
 
-data HvcArgsResult = HvcError HvcErrorType | HvcOperation HvcOperationType
-newtype HvcErrorType = DirError String
+data HvcArgsResult
+  = HvcError HvcErrorType
+  | HvcOperation HvcOperationType
+
+newtype HvcErrorType =
+  DirError String
+
 data HvcOperationType
-  = Init String
-  | Commit String String
+  = Init
+  | Commit String
   | Help
-  | Checkout String String
-  | Log String
-  | Status String
+  | Checkout String
+  | Log
+  | Status
 
-strToSimpleOp :: String -> String -> HvcOperationType
-strToSimpleOp "log" dir = Log dir
-strToSimpleOp "init" dir = Init dir
-strToSimpleOp "status" dir = Status dir
-strToSimpleOp _ _ = Help
+strToSimpleOp :: String -> HvcOperationType
+strToSimpleOp "log" = Log
+strToSimpleOp "init" = Init
+strToSimpleOp "status" = Status
+strToSimpleOp _ = Help
 
-strToCompoundOp :: String -> String -> String -> HvcOperationType
-strToCompoundOp "checkout" dir extra = Checkout dir extra
-strToCompoundOp "commit" dir extra = Commit dir extra
-strToCompoundOp _ _ _ = Help
+strToCompoundOp :: String -> String -> HvcOperationType
+strToCompoundOp "checkout" param = Checkout param
+strToCompoundOp "commit" param = Commit param
+strToCompoundOp _ _ = Help
 
-strToOp :: String -> String -> Maybe String -> HvcOperationType
-strToOp command dir Nothing = strToSimpleOp command dir
-strToOp command dir (Just extra) = strToCompoundOp command dir extra
+strToOp :: String -> Maybe String -> HvcOperationType
+strToOp command Nothing = strToSimpleOp command
+strToOp command (Just param) = strToCompoundOp command param
 
-validateCommand :: String -> String -> Maybe String -> IO HvcArgsResult
-validateCommand command dir extra =
+validateCommand :: String -> Maybe String -> IO HvcArgsResult
+validateCommand command param =
   case operation of
     Help -> return (HvcOperation Help)
     _ -> do
-      valid <- validDir dir
+      valid <- validDir workingDir
       if valid
         then return (HvcOperation operation)
-        else return (HvcError $ DirError $ "Invalid directory: " ++ dir)
+        else return (HvcError $ DirError "Invalid directory")
   where
-    operation = strToOp command dir extra
+    operation = strToOp command param
 
 parseArgs :: [String] -> IO HvcArgsResult
 parseArgs ["help"] = return (HvcOperation Help)
-parseArgs [dir, command] = validateCommand command dir Nothing
-parseArgs [dir, command, extra] = validateCommand command dir (Just extra)
+parseArgs [command] = validateCommand command Nothing
+parseArgs [command, param] = validateCommand command (Just param)
 parseArgs _ = return (HvcOperation Help)
 
 validDir :: FilePath -> IO Bool

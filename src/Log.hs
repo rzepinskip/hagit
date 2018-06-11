@@ -12,12 +12,12 @@ import System.IO (IOMode(..), hGetLine, withFile)
 import Utils
 
 -- | Prints log - list of all commits of the repository in specified directory
-logCommand :: FilePath -> IO ()
-logCommand dir = execIfStore dir (execLog dir)
+logCommand :: IO ()
+logCommand = execIfStore execLog
 
-execLog :: FilePath -> IO ()
-execLog dir = do
-  paths <- getCommitPaths dir
+execLog :: IO ()
+execLog = do
+  paths <- getCommitPaths
   sortedCommits <- loadSortedCommits paths
   forM_ sortedCommits $ \(CommitInfo msg date hash parentHash) -> do
     putStrLn $ "commit " ++ hash
@@ -26,9 +26,9 @@ execLog dir = do
     putStrLn $ ">>= message: " ++ msg
     putStrLn ""
 
-getCommitPaths :: FilePath -> IO [FilePath]
-getCommitPaths dir = do
-  let commitDir = commitsDir dir
+getCommitPaths :: IO [FilePath]
+getCommitPaths = do
+  let commitDir = commitsDir
   commits <- getDirectoryContents commitDir
   return $ map (combine commitDir) $ filter (`notElem` [".", ".."]) commits
 

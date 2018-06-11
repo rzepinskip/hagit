@@ -9,13 +9,13 @@ import DirTreeUtils (hcEmptyTreeDir)
 import Utils
 
 -- | Initializes hagit repository in specified directory
-initCommand :: FilePath -> IO ()
-initCommand dir = do
-  exists <- doesDirectoryExist $ hagitDir dir
+initCommand :: IO ()
+initCommand = do
+  exists <- doesDirectoryExist hagitDir
   if exists
     then putStrLn "Directory is already initialized."
     else do
-      createDirectoryIfMissing True $ objectsDir dir
-      createDirectoryIfMissing True $ commitsDir dir
-      _ <- storeCommit dir "Initial commit." hcEmptyTreeDir
-      putStrLn $ "Init: directory " ++ dir ++ " initialized."
+      createDirectoryIfMissing True objectsDir
+      createDirectoryIfMissing True commitsDir
+      _ <- storeCommit "Initial commit." hcEmptyTreeDir
+      putStrLn "Init: directory initialized."
