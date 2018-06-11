@@ -4,10 +4,8 @@ module Commit
   ) where
 
 import Codec.Compression.GZip
-import Conduit
 import Control.Monad (forM_)
 import qualified Data.ByteString.Lazy as Lazy
-import Data.List (isPrefixOf)
 import Data.Time (getCurrentTime)
 import Hashing
 import System.Directory (doesFileExist)
@@ -21,9 +19,7 @@ commitCommand msg = execIfStore (execCommit msg)
 
 execCommit :: String -> IO ()
 execCommit msg = do
-  files <-
-    runConduitRes $
-    sourceDirectoryDeep False "." .| filterC isValidPath .| sinkList
+  files <- readWorkingTree
   filesWithHashes <- mapM tryToCopyObject files
   if null filesWithHashes
     then putStrLn "Commit: no files to commit."
@@ -31,10 +27,6 @@ execCommit msg = do
       commitHash <- storeCommit msg filesWithHashes
       putStrLn "Commit successful."
       putStrLn $ "Commit hash: " ++ commitHash
-
-isValidPath :: FilePath -> Bool
-isValidPath path =
-  not $ any (`isPrefixOf` path) ["./.hagit", "./.git", "./.stack-work"]
 
 -- | Stores commit on disc
 storeCommit :: String -> [FileWithHash] -> IO ObjectHash
@@ -54,25 +46,15 @@ storeCommitData msg hash filesWithHashes = do
     hPutStrLn file (show $ CommitInfo msg (show date) hash parentHash)
     hPutStrLn file (show filesWithHashes)
 
-data FileWithHash = FileWithHash
-  { getPath :: FilePath
-  , getContentHash :: ObjectHash
-  } deriving (Show)
-
-hashFileData :: FilePath -> IO (Lazy.ByteString, String)
-hashFileData path = do
-  content <- Lazy.readFile path
-  let hash = bsToHex $ hashLazyBS content
-  return (content, hash)
-
 tryToCopyObject :: FilePath -> IO FileWithHash
 tryToCopyObject path = do
-  (content, hash) <- hashFileData path
-  let finalName = objectsDir </> hash
+  hash <- hashFile path
   let res = FileWithHash path hash
+  let finalName = objectsDir </> hash
   exists <- doesFileExist finalName
   if exists
     then return res
     else do
+      content <- Lazy.readFile path
       Lazy.writeFile finalName content
       return res

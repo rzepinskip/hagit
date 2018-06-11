@@ -4,6 +4,7 @@ module Utils
   , commitsDir
   , objectsDir
   , headPath
+  , readWorkingTree
   , printStoreDirError
   , readCommitHead
   , storeCommitHead
@@ -11,22 +12,29 @@ module Utils
   , loadCommit
   , CommitInfo(..)
   , ObjectHash
+  , FileWithHash(..)
   ) where
 
+import Conduit
 import Control.Monad (forM)
+import Data.List (isPrefixOf)
 import System.Directory (doesDirectoryExist, doesFileExist)
 import System.FilePath ((</>), combine)
 import System.IO (IOMode(..), hGetLine, hPutStrLn, withFile)
 
 import DirTree
-
-type ObjectHash = String
+import Hashing
 
 data CommitInfo = CommitInfo
   { getMessage :: String
   , getDate :: String
   , getHash :: String
   , getParentHash :: String
+  } deriving (Show, Read)
+
+data FileWithHash = FileWithHash
+  { getPath :: FilePath
+  , getContentHash :: ObjectHash
   } deriving (Show, Read)
 
 workingDir :: FilePath
@@ -55,11 +63,20 @@ readCommitHead = do
 storeCommitHead :: ObjectHash -> IO ()
 storeCommitHead hash = withFile headPath WriteMode (`hPutStrLn` hash)
 
-loadCommit :: FilePath -> IO (DirTree String)
+loadCommit :: FilePath -> IO [FileWithHash]
 loadCommit path = do
   contents <- readFile path
   let line = lines contents !! 1
   return $ read line
+
+readWorkingTree :: IO [FilePath]
+readWorkingTree =
+  runConduitRes $
+  sourceDirectoryDeep False workingDir .| filterC isValidPath .| sinkList
+
+isValidPath :: FilePath -> Bool
+isValidPath path =
+  not $ any (`isPrefixOf` path) ["./.hagit", "./.git", "./.stack-work"]
 
 printStoreDirError :: IO ()
 printStoreDirError =
