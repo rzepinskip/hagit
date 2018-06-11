@@ -19,6 +19,8 @@ import System.IO (IOMode(..), hGetLine, hPutStrLn, withFile)
 
 import DirTree
 
+type ObjectHash = String
+
 data CommitInfo = CommitInfo
   { getMessage :: String
   , getDate :: String
@@ -49,7 +51,7 @@ readCommitHead = do
     else withFile headPath ReadMode hGetLine
 
 -- | Updates the HEAD file with specified commit    
-storeCommitHead :: String -> IO ()
+storeCommitHead :: ObjectHash -> IO ()
 storeCommitHead hash = withFile headPath WriteMode (`hPutStrLn` hash)
 
 loadCommit :: FilePath -> IO (DirTree String)

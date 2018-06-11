@@ -1,4 +1,4 @@
-module Hash
+module Hashing
   ( hashFile
   , hashString
   , hashLazyBS

@@ -44,7 +44,7 @@ storeObject dest hc = do
     else Lazy.writeFile finalName (compress $ hcContents hc)
 
 -- | Stores commit on disc
-storeCommit :: String -> DirTree HashContents -> IO String
+storeCommit :: String -> DirTree HashContents -> IO ObjectHash
 storeCommit msg tree = do
   let hashesTree = removeByteStrings tree
   let commitHash = treeHash hashesTree
@@ -53,7 +53,7 @@ storeCommit msg tree = do
   return commitHash
 
 -- | Stores commit information
-storeCommitData :: String -> String -> DirTree String -> IO ()
+storeCommitData :: String -> ObjectHash -> DirTree String -> IO ()
 storeCommitData msg hash hashesTree = do
   withFile (commitsDir </> hash) WriteMode $ \file -> do
     date <- getCurrentTime

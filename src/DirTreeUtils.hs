@@ -19,7 +19,7 @@ import System.Directory (doesDirectoryExist, getDirectoryContents)
 import System.FilePath ((</>), makeRelative, normalise)
 
 import DirTree
-import Hash
+import Hashing
 
 type HashContents = (String, Lazy.ByteString)
 

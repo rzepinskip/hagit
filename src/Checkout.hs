@@ -12,10 +12,10 @@ import DirTreeUtils
 import Utils
 
 -- | Checkouts commit with specified hash to particular directory
-checkoutCommand :: String -> IO ()
+checkoutCommand :: ObjectHash -> IO ()
 checkoutCommand hash = execIfStore (execCheckout hash)
 
-execCheckout :: String -> IO ()
+execCheckout :: ObjectHash -> IO ()
 execCheckout hash = do
   let commitFile = commitsDir </> hash
   commitExists <- doesFileExist commitFile
@@ -31,7 +31,7 @@ execCheckout hash = do
         else putStrLn "Checkout: unable to checkout commit: missing objects."
     else putStrLn "Checkout: unable to checkout commit: commit not found."
 
-objectsExist :: [String] -> IO Bool
+objectsExist :: [ObjectHash] -> IO Bool
 objectsExist hashes = do
   filesExist <- forM hashes $ \hash -> doesFileExist $ objectsDir </> hash
   return $ and filesExist
@@ -40,7 +40,7 @@ restoreObjects :: String -> [(FilePath, String)] -> IO ()
 restoreObjects targetDir objs = forM_ objs (restoreObject targetDir)
 
 -- | Reads and restores specified object
-restoreObject :: String -> (FilePath, String) -> IO ()
+restoreObject :: String -> (FilePath, ObjectHash) -> IO ()
 restoreObject targetDir (filepath, hash) = do
   let targetPath = targetDir </> filepath
   compressedContents <- Lazy.readFile (objectsDir </> hash)
