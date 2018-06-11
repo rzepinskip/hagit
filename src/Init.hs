@@ -5,7 +5,6 @@ module Init
 import System.Directory (createDirectoryIfMissing, doesDirectoryExist)
 
 import Commit (storeCommit)
-import DirTreeUtils (hcEmptyTreeDir)
 import Utils
 
 -- | Initializes hagit repository in specified directory
@@ -17,5 +16,5 @@ initCommand = do
     else do
       createDirectoryIfMissing True objectsDir
       createDirectoryIfMissing True commitsDir
-      _ <- storeCommit "Initial commit." hcEmptyTreeDir
+      _ <- storeCommit "Initial commit." []
       putStrLn "Init: directory initialized."

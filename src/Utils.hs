@@ -10,6 +10,7 @@ module Utils
   , execIfStore
   , loadCommit
   , CommitInfo(..)
+  , ObjectHash
   ) where
 
 import Control.Monad (forM)

@@ -67,4 +67,5 @@ executable hagit
                        directory-tree,
                        zlib,
                        containers,
-                       time
+                       time,
+                       conduit
