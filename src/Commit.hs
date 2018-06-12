@@ -3,6 +3,7 @@ module Commit
   , storeCommit
   ) where
 
+import Conduit
 import qualified Data.ByteString.Lazy as Lazy
 import Data.Time (getCurrentTime)
 import Hashing
@@ -18,7 +19,8 @@ commitCommand msg = execIfStore (execCommit msg)
 execCommit :: String -> IO ()
 execCommit msg = do
   files <- readWorkingTree
-  filesWithHashes <- mapM storeObject files
+  filesWithHashes <-
+    runConduit $ yieldMany files .| mapMC (liftIO . storeObject) .| sinkList
   if null filesWithHashes
     then putStrLn "Commit: no files to commit."
     else do
