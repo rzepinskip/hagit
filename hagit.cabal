@@ -55,7 +55,8 @@ executable hagit
                        Log,
                        Status,
                        Hashing,
-                       Utils
+                       Utils,
+                       Diff
   build-depends:       base >= 4.7 && < 5,
                        cryptohash,
                        bytestring,
@@ -67,4 +68,5 @@ executable hagit
                        containers,
                        time,
                        conduit,
-                       strict
+                       strict,
+                       Diff
