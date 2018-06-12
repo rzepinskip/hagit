@@ -34,13 +34,13 @@ test-suite hagit-testsuite
                             QuickCheck >= 2.4.0.1,
                             cryptohash,
                             bytestring,
-                            text,
                             directory,
                             filepath,
-                            directory-tree,
-                            zlib,
                             containers,
-                            time
+                            time,
+                            conduit,
+                            strict,
+                            Diff
                             
 executable hagit
   ghc-options:         -Wall
@@ -60,11 +60,8 @@ executable hagit
   build-depends:       base >= 4.7 && < 5,
                        cryptohash,
                        bytestring,
-                       text,
                        directory,
                        filepath,
-                       directory-tree,
-                       zlib,
                        containers,
                        time,
                        conduit,

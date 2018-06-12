@@ -58,7 +58,7 @@ readCommitHead = do
 
 -- | Updates the HEAD file with specified commit    
 storeCommitHead :: ObjectHash -> IO ()
-storeCommitHead hash = writeFile headPath hash
+storeCommitHead = writeFile headPath
 
 loadCommit :: FilePath -> IO [FileWithHash]
 loadCommit path = do
