@@ -15,7 +15,7 @@ module Utils
   , FileWithHash(..)
   ) where
 
-import Conduit
+import Conduit ((.|), filterC, runConduitRes, sinkList, sourceDirectoryDeep)
 import Control.Monad (forM)
 import Data.List (isPrefixOf)
 import System.Directory (doesDirectoryExist, doesFileExist)

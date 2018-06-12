@@ -3,7 +3,7 @@ module Commit
   , storeCommit
   ) where
 
-import Conduit
+import Conduit ((.|), liftIO, mapMC, runConduit, sinkList, yieldMany)
 import qualified Data.ByteString.Lazy as Lazy
 import Data.Time (getCurrentTime)
 import Hashing

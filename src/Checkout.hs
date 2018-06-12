@@ -2,7 +2,8 @@ module Checkout
   ( checkoutCommand
   ) where
 
-import Control.Monad (forM, forM_)
+import Conduit ((.|), liftIO, mapM_C, runConduit, yieldMany)
+import Control.Monad (forM)
 import qualified Data.ByteString.Lazy as Lazy
 import System.Directory (createDirectoryIfMissing, doesFileExist)
 import System.FilePath ((</>), takeDirectory)
@@ -23,7 +24,7 @@ execCheckout hash = do
       hasObjects <- doesAllObjectsExist $ map getContentHash commitFiles
       if hasObjects
         then do
-          restoreObjects workingDir commitFiles
+          runConduit $ yieldMany commitFiles .| mapM_C (liftIO . restoreObject)
           storeCommitHead hash
           putStrLn $ "Checkout: checked out commit " ++ hash
         else putStrLn "Checkout: unable to checkout commit: missing objects."
@@ -34,15 +35,12 @@ doesAllObjectsExist hashes = do
   filesExist <- forM hashes $ \hash -> doesFileExist $ objectsDir </> hash
   return $ and filesExist
 
-restoreObjects :: String -> [FileWithHash] -> IO ()
-restoreObjects targetDir objs = forM_ objs (restoreObject targetDir)
-
 -- | Reads and restores specified object
-restoreObject :: String -> FileWithHash -> IO ()
-restoreObject targetDir obj = do
+restoreObject :: FileWithHash -> IO ()
+restoreObject obj = do
   let path = getPath obj
   let hash = getContentHash obj
-  let targetPath = targetDir </> path
+  let targetPath = workingDir </> path
   content <- Lazy.readFile (objectsDir </> hash)
   createDirectoryIfMissing True (takeDirectory targetPath)
   Lazy.writeFile targetPath content
