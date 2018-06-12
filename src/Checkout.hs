@@ -8,6 +8,7 @@ import qualified Data.ByteString.Lazy as Lazy
 import System.Directory (createDirectoryIfMissing, doesFileExist)
 import System.FilePath ((</>), takeDirectory)
 
+import Hashing (FileWithHash(..))
 import Utils
 
 -- | Checkouts commit with specified hash to particular directory

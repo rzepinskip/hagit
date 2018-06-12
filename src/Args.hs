@@ -17,6 +17,7 @@ newtype HvcErrorType =
 
 data HvcOperationType
   = Init
+  | IndexAdd FilePath
   | Commit String
   | Help
   | Checkout String
@@ -31,6 +32,7 @@ strToSimpleOp _ = Help
 
 strToCompoundOp :: String -> String -> HvcOperationType
 strToCompoundOp "checkout" param = Checkout param
+strToCompoundOp "add" param = IndexAdd param
 strToCompoundOp "commit" param = Commit param
 strToCompoundOp _ _ = Help
 

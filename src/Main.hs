@@ -5,6 +5,7 @@ import System.Environment
 import Args
 import Checkout
 import Commit
+import Index
 import Init
 import Log
 import Status
@@ -21,6 +22,7 @@ runAction (HvcOperation op) = runOperation op
 
 runOperation :: HvcOperationType -> IO ()
 runOperation Init = initCommand
+runOperation (IndexAdd path) = indexAddCommand path
 runOperation (Commit msg) = commitCommand msg
 runOperation Log = logCommand
 runOperation (Checkout commit) = checkoutCommand commit

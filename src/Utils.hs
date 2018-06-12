@@ -4,6 +4,7 @@ module Utils
   , commitsDir
   , objectsDir
   , headPath
+  , indexPath
   , readWorkingTree
   , printStoreDirError
   , readCommitHead
@@ -12,7 +13,6 @@ module Utils
   , loadCommit
   , CommitInfo(..)
   , ObjectHash
-  , FileWithHash(..)
   ) where
 
 import Conduit ((.|), filterC, runConduitRes, sinkList, sourceDirectoryDeep)
@@ -31,11 +31,6 @@ data CommitInfo = CommitInfo
   , getParentHash :: String
   } deriving (Show, Read)
 
-data FileWithHash = FileWithHash
-  { getPath :: FilePath
-  , getContentHash :: ObjectHash
-  } deriving (Show, Read)
-
 workingDir :: FilePath
 workingDir = "."
 
@@ -50,6 +45,9 @@ objectsDir = hagitDir </> "objects"
 
 headPath :: FilePath
 headPath = hagitDir </> "HEAD"
+
+indexPath :: FilePath
+indexPath = hagitDir </> "INDEX"
 
 readCommitHead :: IO String
 readCommitHead = do

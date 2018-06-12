@@ -5,6 +5,7 @@ module Hashing
   , hashBS
   , bsToHex
   , ObjectHash
+  , FileWithHash(..)
   ) where
 
 import qualified Crypto.Hash.SHA1 as SHA1
@@ -14,6 +15,11 @@ import qualified Data.ByteString.Lazy as Lazy
 import Text.Printf (printf)
 
 type ObjectHash = String
+
+data FileWithHash = FileWithHash
+  { getPath :: FilePath
+  , getContentHash :: ObjectHash
+  } deriving (Show, Read, Eq)
 
 bsToHex :: Strict.ByteString -> String
 bsToHex bytes = concatMap (printf "%02x") (Strict.unpack bytes)
