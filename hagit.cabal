@@ -19,13 +19,11 @@ test-suite hagit-testsuite
   other-modules:       Args,
                       Init,
                       Commit,
-                      DirTree,
                       Checkout,
                       Log,
                       Status,
                       Hashing,
                       Utils,
-                      DirTreeUtils,
                       ObjectTest
   build-depends:       base >= 4.7 && < 5,
                             test-framework >= 0.3.3,
@@ -51,13 +49,11 @@ executable hagit
   other-modules:       Args,
                        Init,
                        Commit,
-                       DirTree,
                        Checkout,
                        Log,
                        Status,
                        Hashing,
-                       Utils,
-                       DirTreeUtils
+                       Utils
   build-depends:       base >= 4.7 && < 5,
                        cryptohash,
                        bytestring,

@@ -3,8 +3,6 @@ module Commit
   , storeCommit
   ) where
 
-import Codec.Compression.GZip
-import Control.Monad (forM_)
 import qualified Data.ByteString.Lazy as Lazy
 import Data.Time (getCurrentTime)
 import Hashing

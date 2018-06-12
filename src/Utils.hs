@@ -22,7 +22,6 @@ import System.Directory (doesDirectoryExist, doesFileExist)
 import System.FilePath ((</>), combine)
 import System.IO (IOMode(..), hGetLine, hPutStrLn, withFile)
 
-import DirTree
 import Hashing
 
 data CommitInfo = CommitInfo
