@@ -20,7 +20,7 @@ commitCommand msg = execIfStore (execCommit msg)
 execCommit :: String -> IO ()
 execCommit msg = do
   files <- readWorkingTree
-  filesWithHashes <- mapM tryToCopyObject files
+  filesWithHashes <- mapM storeObject files
   if null filesWithHashes
     then putStrLn "Commit: no files to commit."
     else do
@@ -46,8 +46,8 @@ storeCommitData msg hash filesWithHashes = do
     hPutStrLn file (show $ CommitInfo msg (show date) hash parentHash)
     hPutStrLn file (show filesWithHashes)
 
-tryToCopyObject :: FilePath -> IO FileWithHash
-tryToCopyObject path = do
+storeObject :: FilePath -> IO FileWithHash
+storeObject path = do
   hash <- hashFile path
   let res = FileWithHash path hash
   let finalName = objectsDir </> hash
