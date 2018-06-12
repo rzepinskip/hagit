@@ -20,7 +20,7 @@ import Control.Monad (forM)
 import Data.List (isPrefixOf)
 import System.Directory (doesDirectoryExist, doesFileExist)
 import System.FilePath ((</>))
-import System.IO (IOMode(..), hGetLine, hPutStrLn, withFile)
+import qualified System.IO.Strict as S (readFile)
 
 import Hashing
 
@@ -54,11 +54,11 @@ readCommitHead = do
   fileExist <- doesFileExist headPath
   if not fileExist
     then return ""
-    else withFile headPath ReadMode hGetLine
+    else S.readFile headPath
 
 -- | Updates the HEAD file with specified commit    
 storeCommitHead :: ObjectHash -> IO ()
-storeCommitHead hash = withFile headPath WriteMode (`hPutStrLn` hash)
+storeCommitHead hash = writeFile headPath hash
 
 loadCommit :: FilePath -> IO [FileWithHash]
 loadCommit path = do

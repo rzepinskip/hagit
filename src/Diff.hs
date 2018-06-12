@@ -10,6 +10,7 @@ module Diff
 import Data.Algorithm.Diff
 import Data.List
 import System.FilePath (takeFileName)
+import qualified System.IO.Strict as S (readFile)
 
 mergeFiles :: FilePath -> FilePath -> IO ()
 mergeFiles current merged = do
@@ -18,8 +19,8 @@ mergeFiles current merged = do
 
 getFileDiffs :: FilePath -> FilePath -> IO String
 getFileDiffs current merged = do
-  currentContent <- readFile current
-  mergedContent <- readFile merged
+  currentContent <- S.readFile current
+  mergedContent <- S.readFile merged
   let currentName = takeFileName current
   let mergedName = takeFileName merged
   let lineDiffs =

@@ -9,7 +9,6 @@ import qualified Data.ByteString.Lazy as Lazy (readFile, writeFile)
 import Data.List ((\\), nub)
 import System.Directory (doesDirectoryExist, doesFileExist, removeFile)
 import System.FilePath ((</>), joinPath, splitPath)
-import System.IO (IOMode(..), hPutStrLn, withFile)
 import qualified System.IO.Strict as S (readFile)
 
 import Hashing (FileWithHash(..), hashFile)
@@ -24,7 +23,7 @@ addPathToIndex path = do
   filesPaths <- readFilesFromPath path
   filesWithHashes <- storeObjects filesPaths
   let updatedIndex = nub $ filesWithHashes ++ index
-  withFile indexPath WriteMode (`hPutStrLn` show updatedIndex)
+  writeFile indexPath $ show updatedIndex
 
 loadIndex :: IO [FileWithHash]
 loadIndex = do
@@ -75,7 +74,7 @@ removePathFromIndex path = do
   let objectsToRemove = filter (\file -> getPath file `elem` removedFiles) index
   runConduit $ yieldMany objectsToRemove .| mapM_C removeObject
   let updatedIndex = index \\ objectsToRemove
-  withFile indexPath WriteMode (`hPutStrLn` show updatedIndex)
+  writeFile indexPath $ show updatedIndex
 
 removeObject :: FileWithHash -> IO ()
 removeObject file = removeFile $ objectsDir </> getContentHash file

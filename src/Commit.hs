@@ -5,7 +5,6 @@ module Commit
 
 import Data.Time (getCurrentTime)
 import System.FilePath ((</>))
-import System.IO (IOMode(..), hPutStrLn, withFile)
 
 import Hashing
 import Index (loadIndex)
@@ -37,8 +36,8 @@ storeCommit msg index = do
 -- | Stores commit information
 storeCommitData :: String -> ObjectHash -> [FileWithHash] -> IO ()
 storeCommitData msg hash index = do
-  withFile (commitsDir </> hash) WriteMode $ \file -> do
-    date <- getCurrentTime
-    parentHash <- readCommitHead
-    hPutStrLn file (show $ CommitInfo msg (show date) hash parentHash)
-    hPutStrLn file (show index)
+  date <- getCurrentTime
+  parentHash <- readCommitHead
+  let info = show $ CommitInfo msg (show date) hash parentHash
+  let objects = show index
+  writeFile (commitsDir </> hash) (info ++ "\n" ++ objects)

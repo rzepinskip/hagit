@@ -3,7 +3,6 @@ module Init
   ) where
 
 import System.Directory (createDirectoryIfMissing, doesDirectoryExist)
-import System.IO (IOMode(..), hPutStrLn, withFile)
 
 import Commit (storeCommit)
 import Utils
@@ -17,6 +16,6 @@ initCommand = do
     else do
       createDirectoryIfMissing True objectsDir
       createDirectoryIfMissing True commitsDir
-      withFile indexPath WriteMode (`hPutStrLn` "")
+      writeFile indexPath ""
       _ <- storeCommit "Initial commit." []
       putStrLn "Init: directory initialized."

@@ -2,7 +2,7 @@ module Status
   ( statusCommand
   ) where
 
-import Control.Monad (unless)
+import Control.Monad (unless, when)
 import qualified Data.Map as M
 
 import Hashing
@@ -28,10 +28,11 @@ compareIndexAndWorkingDir work index = do
   let indexMap = M.fromList (map toFileWithHashTuple index)
   let staged = indexMap `M.intersection` workMap
   printMap "Changes to be committed:\n" staged
-  putStrLn "Changes not staged for commit:\n"
   let deleted = indexMap `M.difference` workMap
-  printMapInlineHeader "deleted:" deleted
   let modified = M.differenceWith cmpEqual indexMap workMap
+  when (not (null deleted) || not (null modified)) $
+    putStrLn "Changes not staged for commit:\n"
+  printMapInlineHeader "deleted:" deleted
   printMapInlineHeader "modified:" modified
   let unstaged = workMap `M.difference` indexMap
   printMap "Untracked files:\n" unstaged
