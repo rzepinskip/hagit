@@ -2,66 +2,56 @@ module Status
   ( statusCommand
   ) where
 
-import qualified Data.Map.Strict as Map
+import Control.Monad (unless)
+import qualified Data.Map as M
 
 import Hashing
 import Index (loadIndex)
 import Utils
 
--- | Prints status of current repository - new/modified/deleted files in comparison to latest commit
+-- | Prints status of work repository - new/modified/deleted files in comparison to latest commit
 statusCommand :: IO ()
 statusCommand = execIfStore execStatus
 
 execStatus :: IO ()
 execStatus = do
   files <- readDirectoryRec workingDir
-  filesWithHashes <- mapM toFileWithHash files
+  workFiles <- mapM toFileWithHash files
   commitHead <- readCommitHead
-  putStrLn $ "Status: commit HEAD is: " ++ commitHead
-  indexedTree <- loadIndex
-  let cmpLines = compareTrees filesWithHashes indexedTree
-  putStrLn $
-    if not (null cmpLines)
-      then unlines cmpLines
-      else "No changes have been made since last commit."
+  putStrLn $ "HEAD: " ++ commitHead
+  indexFiles <- loadIndex
+  compareIndexAndWorkingDir workFiles indexFiles
 
-compareTrees :: [FileWithHash] -> [FileWithHash] -> [String]
-compareTrees current stored =
-  concatMap (\f -> f currentMap storedMap) cmpFunctions
-  where
-    currentMap = Map.fromList (map toFileWithHashTuple current)
-    storedMap = Map.fromList (map toFileWithHashTuple stored)
-    cmpFunctions = [listNewFiles, listDeletedFiles, listChangedFiles]
+compareIndexAndWorkingDir :: [FileWithHash] -> [FileWithHash] -> IO ()
+compareIndexAndWorkingDir work index = do
+  let workMap = M.fromList (map toFileWithHashTuple work)
+  let indexMap = M.fromList (map toFileWithHashTuple index)
+  let staged = indexMap `M.intersection` workMap
+  printMap "Changes to be committed:\n" staged
+  putStrLn "Changes not staged for commit:\n"
+  let deleted = indexMap `M.difference` workMap
+  printMapInlineHeader "deleted:" deleted
+  let modified = M.differenceWith cmpEqual indexMap workMap
+  printMapInlineHeader "modified:" modified
+  let unstaged = workMap `M.difference` indexMap
+  printMap "Untracked files:\n" unstaged
 
 toFileWithHashTuple :: FileWithHash -> (FilePath, ObjectHash)
 toFileWithHashTuple file = (getPath file, getContentHash file)
 
-listNewFiles ::
-     Map.Map FilePath ObjectHash -> Map.Map FilePath ObjectHash -> [String]
-listNewFiles = mapDifferencesInfo "file not staged: "
+cmpEqual :: ObjectHash -> ObjectHash -> Maybe ObjectHash
+cmpEqual a b =
+  if a == b
+    then Nothing
+    else Just a
 
-listDeletedFiles ::
-     Map.Map FilePath ObjectHash -> Map.Map FilePath ObjectHash -> [String]
-listDeletedFiles = flip $ mapDifferencesInfo "file deleted: "
+printMapInlineHeader :: String -> M.Map FilePath ObjectHash -> IO ()
+printMapInlineHeader header filesMap = do
+  let paths =
+        map (\(path, _) -> "\t" ++ header ++ "\t" ++ path) $ M.toList filesMap
+  unless (null paths) $ putStrLn $ unlines paths
 
-mapDifferencesInfo ::
-     String
-  -> Map.Map FilePath ObjectHash
-  -> Map.Map FilePath ObjectHash
-  -> [String]
-mapDifferencesInfo msg base other = map (\path -> msg ++ path) paths
-  where
-    paths = map fst (Map.toList (Map.difference base other))
-
-listChangedFiles ::
-     Map.Map FilePath ObjectHash -> Map.Map FilePath ObjectHash -> [String]
-listChangedFiles base other =
-  foldr
-    (\(path, same) xs ->
-       if same
-         then xs
-         else ("file modified: " ++ path) : xs)
-    []
-    changedList
-  where
-    changedList = Map.toList $ Map.intersectionWith (==) base other
+printMap :: String -> M.Map FilePath ObjectHash -> IO ()
+printMap header filesMap = do
+  let paths = map (\(path, _) -> "\t" ++ path) $ M.toList filesMap
+  unless (null paths) $ putStrLn $ ((header ++ "\n") ++) $ unlines paths
