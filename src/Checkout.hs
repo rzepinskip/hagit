@@ -26,6 +26,7 @@ execCheckout hash = do
       if hasObjects
         then do
           runConduit $ yieldMany commitFiles .| mapM_C (liftIO . restoreObject)
+          restoreIndex commitFiles
           storeCommitHead hash
           putStrLn $ "Checkout: checked out commit " ++ hash
         else putStrLn "Checkout: unable to checkout commit: missing objects."
@@ -45,3 +46,6 @@ restoreObject obj = do
   content <- Lazy.readFile (objectsDir </> hash)
   createDirectoryIfMissing True (takeDirectory targetPath)
   Lazy.writeFile targetPath content
+
+restoreIndex :: [FileWithHash] -> IO ()
+restoreIndex files = writeFile indexPath $ show files
