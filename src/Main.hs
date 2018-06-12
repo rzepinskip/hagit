@@ -23,6 +23,7 @@ runAction (HvcOperation op) = runOperation op
 runOperation :: HvcOperationType -> IO ()
 runOperation Init = initCommand
 runOperation (IndexAdd path) = indexAddCommand path
+runOperation (IndexRemove path) = indexRemoveCommand path
 runOperation (Commit msg) = commitCommand msg
 runOperation Log = logCommand
 runOperation (Checkout commit) = checkoutCommand commit
@@ -35,5 +36,6 @@ printError _ = putStrLn "There was an error"
 printHelp :: IO ()
 printHelp = do
   putStrLn "Usage: hagit <operation> [options]"
-  putStrLn "Valid operations are: init, commit, checkout, log, status, help"
+  putStrLn
+    "Valid operations are: init, commit, checkout, log, add, remove, status, help"
   putStrLn "See README.md for more details."

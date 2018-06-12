@@ -14,7 +14,7 @@ statusCommand = execIfStore execStatus
 
 execStatus :: IO ()
 execStatus = do
-  files <- readWorkingTree
+  files <- readDirectoryRec workingDir
   filesWithHashes <- mapM toFileWithHash files
   commitHead <- readCommitHead
   putStrLn $ "Status: commit HEAD is: " ++ commitHead
@@ -26,14 +26,6 @@ execStatus = do
       then unlines cmpLines
       else "No changes have been made since last commit."
 
-toFileWithHash :: FilePath -> IO FileWithHash
-toFileWithHash path = do
-  hash <- hashFile path
-  return $ FileWithHash path hash
-
-toFileWithHashTuple :: FileWithHash -> (FilePath, ObjectHash)
-toFileWithHashTuple file = (getPath file, getContentHash file)
-
 compareTrees :: [FileWithHash] -> [FileWithHash] -> [String]
 compareTrees current stored =
   concatMap (\f -> f currentMap storedMap) cmpFunctions
@@ -41,6 +33,9 @@ compareTrees current stored =
     currentMap = Map.fromList (map toFileWithHashTuple current)
     storedMap = Map.fromList (map toFileWithHashTuple stored)
     cmpFunctions = [listNewFiles, listDeletedFiles, listChangedFiles]
+
+toFileWithHashTuple :: FileWithHash -> (FilePath, ObjectHash)
+toFileWithHashTuple file = (getPath file, getContentHash file)
 
 listNewFiles ::
      Map.Map FilePath ObjectHash -> Map.Map FilePath ObjectHash -> [String]

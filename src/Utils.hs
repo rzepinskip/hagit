@@ -5,7 +5,7 @@ module Utils
   , objectsDir
   , headPath
   , indexPath
-  , readWorkingTree
+  , readDirectoryRec
   , printStoreDirError
   , readCommitHead
   , storeCommitHead
@@ -66,10 +66,10 @@ loadCommit path = do
   let line = lines contents !! 1
   return $ read line
 
-readWorkingTree :: IO [FilePath]
-readWorkingTree =
+readDirectoryRec :: FilePath -> IO [FilePath]
+readDirectoryRec dir =
   runConduitRes $
-  sourceDirectoryDeep False workingDir .| filterC isValidPath .| sinkList
+  sourceDirectoryDeep False dir .| filterC isValidPath .| sinkList
 
 isValidPath :: FilePath -> Bool
 isValidPath path =

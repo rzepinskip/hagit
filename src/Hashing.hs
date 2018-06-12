@@ -1,5 +1,6 @@
 module Hashing
   ( hashFile
+  , toFileWithHash
   , hashString
   , hashLazyBS
   , hashBS
@@ -38,3 +39,6 @@ hashFile path = do
   content <- Lazy.readFile path
   let hash = bsToHex $ hashLazyBS content
   return hash
+
+toFileWithHash :: FilePath -> IO FileWithHash
+toFileWithHash path = FileWithHash path <$> hashFile path

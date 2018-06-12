@@ -18,7 +18,7 @@ commitCommand msg = execIfStore (execCommit msg)
 
 execCommit :: String -> IO ()
 execCommit msg = do
-  files <- readWorkingTree
+  files <- readDirectoryRec workingDir
   filesWithHashes <-
     runConduit $ yieldMany files .| mapMC (liftIO . storeObject) .| sinkList
   if null filesWithHashes
