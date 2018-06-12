@@ -3,9 +3,9 @@ module Status
   ) where
 
 import qualified Data.Map.Strict as Map
-import System.FilePath ((</>))
 
 import Hashing
+import Index (loadIndex)
 import Utils
 
 -- | Prints status of current repository - new/modified/deleted files in comparison to latest commit
@@ -18,9 +18,8 @@ execStatus = do
   filesWithHashes <- mapM toFileWithHash files
   commitHead <- readCommitHead
   putStrLn $ "Status: commit HEAD is: " ++ commitHead
-  let commitPath = commitsDir </> commitHead
-  commitedTree <- loadCommit commitPath
-  let cmpLines = compareTrees filesWithHashes commitedTree
+  indexedTree <- loadIndex
+  let cmpLines = compareTrees filesWithHashes indexedTree
   putStrLn $
     if not (null cmpLines)
       then unlines cmpLines
@@ -39,7 +38,7 @@ toFileWithHashTuple file = (getPath file, getContentHash file)
 
 listNewFiles ::
      Map.Map FilePath ObjectHash -> Map.Map FilePath ObjectHash -> [String]
-listNewFiles = mapDifferencesInfo "new file created: "
+listNewFiles = mapDifferencesInfo "file not staged: "
 
 listDeletedFiles ::
      Map.Map FilePath ObjectHash -> Map.Map FilePath ObjectHash -> [String]
@@ -60,8 +59,8 @@ listChangedFiles base other =
   foldr
     (\(path, same) xs ->
        if same
-         then xs
-         else ("file changed: " ++ path) : xs)
+         then ("file staged: " ++ path) : xs
+         else ("file modified: " ++ path) : xs)
     []
     changedList
   where

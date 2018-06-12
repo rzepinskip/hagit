@@ -19,7 +19,7 @@ import Conduit ((.|), filterC, runConduitRes, sinkList, sourceDirectoryDeep)
 import Control.Monad (forM)
 import Data.List (isPrefixOf)
 import System.Directory (doesDirectoryExist, doesFileExist)
-import System.FilePath ((</>), combine)
+import System.FilePath ((</>))
 import System.IO (IOMode(..), hGetLine, hPutStrLn, withFile)
 
 import Hashing
@@ -35,7 +35,7 @@ workingDir :: FilePath
 workingDir = "."
 
 hagitDir :: FilePath
-hagitDir = combine workingDir ".hagit"
+hagitDir = workingDir </> ".hagit"
 
 commitsDir :: FilePath
 commitsDir = hagitDir </> "commits"

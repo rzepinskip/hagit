@@ -1,15 +1,18 @@
 module Index
   ( indexAddCommand
   , indexRemoveCommand
+  , loadIndex
+  , formatPath
   ) where
 
 import Data.List (nub)
 import System.Directory (doesDirectoryExist, doesFileExist)
+import System.FilePath ((</>), joinPath, splitPath)
 import System.IO (IOMode(..), hPutStrLn, withFile)
 import qualified System.IO.Strict as S
 
 import Hashing (FileWithHash(..), toFileWithHash)
-import Utils (execIfStore, indexPath, readDirectoryRec)
+import Utils (execIfStore, indexPath, readDirectoryRec, workingDir)
 
 indexAddCommand :: FilePath -> IO ()
 indexAddCommand path = execIfStore (addPathToIndex path)
@@ -31,14 +34,14 @@ removePathFromIndex path = do
 
 loadIndexAndFiles :: FilePath -> IO ([FileWithHash], [FileWithHash])
 loadIndexAndFiles path = do
-  index <- loadIndex indexPath
+  index <- loadIndex
   filesPaths <- readFilesFromPath path
   filesWithHashes <- mapM toFileWithHash filesPaths
   return (index, filesWithHashes)
 
-loadIndex :: FilePath -> IO [FileWithHash]
-loadIndex path = do
-  contents <- S.readFile path
+loadIndex :: IO [FileWithHash]
+loadIndex = do
+  contents <- S.readFile indexPath
   if not (null contents)
     then return $ read $ head (lines contents)
     else return []
@@ -48,7 +51,12 @@ readFilesFromPath path = do
   isDir <- doesDirectoryExist path
   isFile <- doesFileExist path
   if isDir
-    then readDirectoryRec path
+    then map (formatPath path) <$> readDirectoryRec path
     else if isFile
-           then return [path]
+           then return [formatPath workingDir path]
            else return []
+
+formatPath :: FilePath -> FilePath -> FilePath
+formatPath dir filePath = do
+  let tailedDir = joinPath $ tail $ splitPath dir
+  workingDir </> tailedDir </> filePath
