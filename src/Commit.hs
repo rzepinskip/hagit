@@ -3,13 +3,12 @@ module Commit
   , storeCommit
   ) where
 
-import Conduit ((.|), liftIO, mapMC, runConduit, sinkList, yieldMany)
-import qualified Data.ByteString.Lazy as Lazy
 import Data.Time (getCurrentTime)
-import Hashing
-import System.Directory (doesFileExist)
 import System.FilePath ((</>))
 import System.IO (IOMode(..), hPutStrLn, withFile)
+
+import Hashing
+import Index (loadIndex)
 import Utils
 
 -- | Commits all files in directory with specified message.
@@ -18,43 +17,28 @@ commitCommand msg = execIfStore (execCommit msg)
 
 execCommit :: String -> IO ()
 execCommit msg = do
-  files <- readDirectoryRec workingDir
-  filesWithHashes <-
-    runConduit $ yieldMany files .| mapMC (liftIO . storeObject) .| sinkList
-  if null filesWithHashes
+  index <- loadIndex
+  if null index
     then putStrLn "Commit: no files to commit."
     else do
-      commitHash <- storeCommit msg filesWithHashes
+      commitHash <- storeCommit msg index
       putStrLn "Commit successful."
       putStrLn $ "Commit hash: " ++ commitHash
 
 -- | Stores commit on disc
 storeCommit :: String -> [FileWithHash] -> IO ObjectHash
-storeCommit msg filesWithHashes = do
-  let filesHashes = map getContentHash filesWithHashes
+storeCommit msg index = do
+  let filesHashes = map getContentHash index
   let commitHash = bsToHex . hashString $ concat filesHashes
-  storeCommitData msg commitHash filesWithHashes
+  storeCommitData msg commitHash index
   storeCommitHead commitHash
   return commitHash
 
 -- | Stores commit information
 storeCommitData :: String -> ObjectHash -> [FileWithHash] -> IO ()
-storeCommitData msg hash filesWithHashes = do
+storeCommitData msg hash index = do
   withFile (commitsDir </> hash) WriteMode $ \file -> do
     date <- getCurrentTime
     parentHash <- readCommitHead
     hPutStrLn file (show $ CommitInfo msg (show date) hash parentHash)
-    hPutStrLn file (show filesWithHashes)
-
-storeObject :: FilePath -> IO FileWithHash
-storeObject path = do
-  hash <- hashFile path
-  let res = FileWithHash path hash
-  let finalName = objectsDir </> hash
-  exists <- doesFileExist finalName
-  if exists
-    then return res
-    else do
-      content <- Lazy.readFile path
-      Lazy.writeFile finalName content
-      return res
+    hPutStrLn file (show index)

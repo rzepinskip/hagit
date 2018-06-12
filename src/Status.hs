@@ -59,7 +59,7 @@ listChangedFiles base other =
   foldr
     (\(path, same) xs ->
        if same
-         then ("file staged: " ++ path) : xs
+         then xs
          else ("file modified: " ++ path) : xs)
     []
     changedList

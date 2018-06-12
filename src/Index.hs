@@ -2,42 +2,29 @@ module Index
   ( indexAddCommand
   , indexRemoveCommand
   , loadIndex
-  , formatPath
   ) where
 
-import Data.List (nub)
-import System.Directory (doesDirectoryExist, doesFileExist)
+import Conduit ((.|), liftIO, mapMC, mapM_C, runConduit, sinkList, yieldMany)
+import qualified Data.ByteString.Lazy as Lazy (readFile, writeFile)
+import Data.List ((\\), nub)
+import System.Directory (doesDirectoryExist, doesFileExist, removeFile)
 import System.FilePath ((</>), joinPath, splitPath)
 import System.IO (IOMode(..), hPutStrLn, withFile)
-import qualified System.IO.Strict as S
+import qualified System.IO.Strict as S (readFile)
 
-import Hashing (FileWithHash(..), toFileWithHash)
-import Utils (execIfStore, indexPath, readDirectoryRec, workingDir)
+import Hashing (FileWithHash(..), hashFile)
+import Utils (execIfStore, indexPath, objectsDir, readDirectoryRec, workingDir)
 
 indexAddCommand :: FilePath -> IO ()
 indexAddCommand path = execIfStore (addPathToIndex path)
 
-indexRemoveCommand :: FilePath -> IO ()
-indexRemoveCommand path = execIfStore (removePathFromIndex path)
-
 addPathToIndex :: FilePath -> IO ()
 addPathToIndex path = do
-  (index, filesWithHashes) <- loadIndexAndFiles path
-  let updatedIndex = nub $ filesWithHashes ++ index
-  withFile indexPath WriteMode (`hPutStrLn` show updatedIndex)
-
-removePathFromIndex :: FilePath -> IO ()
-removePathFromIndex path = do
-  (index, filesWithHashes) <- loadIndexAndFiles path
-  let updatedIndex = filter (`notElem` filesWithHashes) index
-  withFile indexPath WriteMode (`hPutStrLn` show updatedIndex)
-
-loadIndexAndFiles :: FilePath -> IO ([FileWithHash], [FileWithHash])
-loadIndexAndFiles path = do
   index <- loadIndex
   filesPaths <- readFilesFromPath path
-  filesWithHashes <- mapM toFileWithHash filesPaths
-  return (index, filesWithHashes)
+  filesWithHashes <- storeObjects filesPaths
+  let updatedIndex = nub $ filesWithHashes ++ index
+  withFile indexPath WriteMode (`hPutStrLn` show updatedIndex)
 
 loadIndex :: IO [FileWithHash]
 loadIndex = do
@@ -60,3 +47,35 @@ formatPath :: FilePath -> FilePath -> FilePath
 formatPath dir filePath = do
   let tailedDir = joinPath $ tail $ splitPath dir
   workingDir </> tailedDir </> filePath
+
+storeObjects :: [FilePath] -> IO [FileWithHash]
+storeObjects files =
+  runConduit $ yieldMany files .| mapMC (liftIO . storeObject) .| sinkList
+
+storeObject :: FilePath -> IO FileWithHash
+storeObject path = do
+  hash <- hashFile path
+  let res = FileWithHash path hash
+  let finalName = objectsDir </> hash
+  exists <- doesFileExist finalName
+  if exists
+    then return res
+    else do
+      content <- Lazy.readFile path
+      Lazy.writeFile finalName content
+      return res
+
+indexRemoveCommand :: FilePath -> IO ()
+indexRemoveCommand path = execIfStore (removePathFromIndex path)
+
+removePathFromIndex :: FilePath -> IO ()
+removePathFromIndex path = do
+  index <- loadIndex
+  removedFiles <- readFilesFromPath path
+  let objectsToRemove = filter (\file -> getPath file `elem` removedFiles) index
+  runConduit $ yieldMany objectsToRemove .| mapM_C removeObject
+  let updatedIndex = index \\ objectsToRemove
+  withFile indexPath WriteMode (`hPutStrLn` show updatedIndex)
+
+removeObject :: FileWithHash -> IO ()
+removeObject file = removeFile $ objectsDir </> getContentHash file
