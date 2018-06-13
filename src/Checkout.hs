@@ -1,10 +1,10 @@
 module Checkout
   ( checkoutCommand
+  , restoreOrMergeFile
   ) where
 
 import Conduit ((.|), liftIO, mapM_C, runConduit, yieldMany)
 import Control.Monad (forM)
-import qualified Data.ByteString.Lazy as Lazy
 import qualified Data.Map as M
 import System.Directory (createDirectoryIfMissing, doesFileExist, listDirectory)
 import System.FilePath ((</>), takeDirectory)
@@ -12,6 +12,7 @@ import qualified System.IO.Strict as S (readFile)
 
 import Branch (createBranch, readHeadCommit, storeHeadCommit)
 import Commit (loadCommitObjects)
+import Diff (mergeFiles)
 import Hashing (ShaHash)
 import Utils
 
@@ -76,9 +77,17 @@ doesAllObjectsExist hashes = do
 restoreObject :: (FilePath, ShaHash) -> IO ()
 restoreObject (path, hash) = do
   let targetPath = workingDir </> path
-  content <- Lazy.readFile (objectsDir </> hash)
   createDirectoryIfMissing True (takeDirectory targetPath)
-  Lazy.writeFile targetPath content
+  restoreOrMergeFile (objectsDir </> hash) targetPath
+
+restoreOrMergeFile :: FilePath -> FilePath -> IO ()
+restoreOrMergeFile sourcePath targetPath = do
+  exists <- doesFileExist targetPath
+  if exists
+    then mergeFiles targetPath sourcePath
+    else do
+      content <- S.readFile sourcePath
+      writeFile targetPath content
 
 restoreIndex :: M.Map FilePath ShaHash -> IO ()
 restoreIndex files = writeFile indexPath $ show files
