@@ -21,6 +21,7 @@ data HvcOperationType
   | IndexRemove FilePath
   | Commit String
   | Checkout String
+  | Diff [String]
   | Branch
   | Log
   | Status
@@ -33,19 +34,25 @@ strToSimpleOp "status" = Status
 strToSimpleOp "branch" = Branch
 strToSimpleOp _ = Help
 
-strToCompoundOp :: String -> String -> HvcOperationType
-strToCompoundOp "checkout" param = Checkout param
-strToCompoundOp "add" param = IndexAdd param
-strToCompoundOp "remove" param = IndexRemove param
-strToCompoundOp "commit" param = Commit param
-strToCompoundOp _ _ = Help
+strToParamOp :: String -> String -> HvcOperationType
+strToParamOp "checkout" param = Checkout param
+strToParamOp "add" param = IndexAdd param
+strToParamOp "remove" param = IndexRemove param
+strToParamOp "commit" param = Commit param
+strToParamOp "diff" param = Diff [param]
+strToParamOp _ _ = Help
 
-strToOp :: String -> Maybe String -> HvcOperationType
-strToOp command Nothing = strToSimpleOp command
-strToOp command (Just param) = strToCompoundOp command param
+strToParamsOp :: String -> [String] -> HvcOperationType
+strToParamsOp "diff" params = Diff params
+strToParamsOp _ _ = Help
 
-validateCommand :: String -> Maybe String -> IO HvcArgsResult
-validateCommand command param =
+strToOp :: String -> [String] -> HvcOperationType
+strToOp command [] = strToSimpleOp command
+strToOp command [param] = strToParamOp command param
+strToOp command params = strToParamsOp command params
+
+validateCommand :: String -> [String] -> IO HvcArgsResult
+validateCommand command params =
   case operation of
     Help -> return (HvcOperation Help)
     _ -> do
@@ -54,13 +61,14 @@ validateCommand command param =
         then return (HvcOperation operation)
         else return (HvcError $ DirError "Invalid directory")
   where
-    operation = strToOp command param
+    operation = strToOp command params
 
 parseArgs :: [String] -> IO HvcArgsResult
+parseArgs [] = return (HvcOperation Help)
 parseArgs ["help"] = return (HvcOperation Help)
-parseArgs [command] = validateCommand command Nothing
-parseArgs [command, param] = validateCommand command (Just param)
-parseArgs _ = return (HvcOperation Help)
+parseArgs [command] = validateCommand command []
+parseArgs [command, param] = validateCommand command [param]
+parseArgs manyParams = validateCommand (head manyParams) (tail manyParams)
 
 validDir :: FilePath -> IO Bool
 validDir fp = do

@@ -5,12 +5,37 @@
 -----------------------------------------------------------------------------
 module Diff
   ( mergeFiles
+  , diffCommand
   ) where
 
 import Data.Algorithm.Diff
+import Data.Algorithm.DiffOutput (ppDiff)
 import Data.List
+import qualified Data.Map as M
+import Data.Maybe (fromJust)
 import System.FilePath (takeFileName)
+import System.FilePath ((</>))
 import qualified System.IO.Strict as S (readFile)
+
+import Index (loadIndex)
+import Utils
+
+diffCommand :: [FilePath] -> IO ()
+diffCommand paths = execIfStore $ execDiff paths
+
+execDiff :: [String] -> IO ()
+execDiff paths = do
+  mapM_ diffFile paths
+
+diffFile :: FilePath -> IO ()
+diffFile path = do
+  currentContent <- S.readFile path
+  index <- loadIndex
+  let indexedHash = fromJust $ M.lookup (workingDir </> path) index
+  indexedContent <- S.readFile $ objectsDir </> indexedHash
+  putStrLn $ "FILE: " ++ path
+  putStrLn $
+    ppDiff $ getGroupedDiff (lines currentContent) (lines indexedContent)
 
 mergeFiles :: FilePath -> FilePath -> IO ()
 mergeFiles current merged = do

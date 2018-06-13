@@ -6,6 +6,7 @@ import Args
 import Branch
 import Checkout
 import Commit
+import Diff
 import Index
 import Init
 import Log
@@ -27,6 +28,7 @@ runOperation (IndexAdd path) = indexAddCommand path
 runOperation (IndexRemove path) = indexRemoveCommand path
 runOperation (Commit msg) = commitCommand msg
 runOperation (Checkout commit) = checkoutCommand commit
+runOperation (Diff paths) = diffCommand paths
 runOperation Branch = branchCommand
 runOperation Log = logCommand
 runOperation Status = statusCommand
