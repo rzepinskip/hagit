@@ -52,6 +52,7 @@ checkoutNewBranch name = do
   createBranch name hash
   _ <- checkoutCommit hash
   writeFile headPath $ "refs" </> name
+  putStrLn $ "Checked out NEW branch: " ++ name
 
 checkoutCommit :: ShaHash -> IO ShaHash
 checkoutCommit hash = do

@@ -29,12 +29,12 @@ execStatus = do
 
 compareFiles ::
      [FileWithHash] -> M.Map FilePath ShaHash -> M.Map FilePath ShaHash -> IO ()
-compareFiles work indexMap commitMap = do
-  printDiffs "\nChanges to be committed:" $ getDiffs indexMap commitMap
-  let unstaged = getDiffs workMap indexMap
-  printDiffs "\nChanges not staged for commit:" $
+compareFiles work index commitMap = do
+  printDiffs "\nChanges to be committed:\n" $ getDiffs index commitMap
+  let unstaged = getDiffs workMap index
+  printDiffs "\nChanges not staged for commit:\n" $
     filter (not . isAddition) unstaged
-  printDiffs "\nUntracked files:" $ filter isAddition unstaged
+  printDiffs "\nUntracked files:\n" $ filter isAddition unstaged
   where
     workMap = M.fromList (map toFileWithHashTuple work)
 
