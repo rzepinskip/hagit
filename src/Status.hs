@@ -1,6 +1,8 @@
 {-# LANGUAGE PatternSynonyms #-}
 
-module Status where
+module Status
+  ( statusCommand
+  ) where
 
 import Control.Monad (unless)
 import qualified Data.Map as M
@@ -8,7 +10,7 @@ import System.FilePath ((</>))
 
 import Branch (readHeadCommit)
 import Commit (loadCommitObjects)
-import Hashing
+import Hashing (hashFile)
 import Index (loadIndex)
 import Utils
 
@@ -19,7 +21,7 @@ statusCommand = execIfStore execStatus
 execStatus :: IO ()
 execStatus = do
   files <- readDirectoryRec workingDir
-  workFiles <- mapM toFileWithHash files
+  workFiles <- mapM toFilePathWithHashTuple files
   commitHead <- readHeadCommit
   putStrLn $ "HEAD: " ++ commitHead
   indexFiles <- loadIndex
@@ -27,8 +29,16 @@ execStatus = do
   committedFiles <- loadCommitObjects $ commitsDir </> headFile
   compareFiles workFiles indexFiles committedFiles
 
+toFilePathWithHashTuple :: FilePath -> IO (FilePath, ShaHash)
+toFilePathWithHashTuple path = do
+  hash <- hashFile path
+  return (path, hash)
+
 compareFiles ::
-     [FileWithHash] -> M.Map FilePath ShaHash -> M.Map FilePath ShaHash -> IO ()
+     [(FilePath, ShaHash)]
+  -> M.Map FilePath ShaHash
+  -> M.Map FilePath ShaHash
+  -> IO ()
 compareFiles work index commitMap = do
   printDiffs "\nChanges to be committed:\n" $ getDiffs index commitMap
   let unstaged = getDiffs workMap index
@@ -36,7 +46,7 @@ compareFiles work index commitMap = do
     filter (not . isAddition) unstaged
   printDiffs "\nUntracked files:\n" $ filter isAddition unstaged
   where
-    workMap = M.fromList (map toFileWithHashTuple work)
+    workMap = M.fromList work
 
 isAddition :: DiffOperation a -> Bool
 isAddition (Addition _) = True

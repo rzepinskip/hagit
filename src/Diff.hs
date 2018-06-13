@@ -10,7 +10,7 @@ module Diff
 
 import Data.Algorithm.Diff
 import Data.Algorithm.DiffOutput (ppDiff)
-import Data.List
+import Data.List (intercalate)
 import qualified Data.Map as M
 import Data.Maybe (fromJust)
 import System.FilePath (takeFileName)

@@ -4,7 +4,6 @@ module Branch
   , createBranch
   , initHead
   , branchCommand
-  , createBranch
   ) where
 
 import Control.Monad (forM_)

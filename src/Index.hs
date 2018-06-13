@@ -7,7 +7,6 @@ module Index
   ) where
 
 import Conduit ((.|), liftIO, mapMC, mapM_C, runConduit, sinkList, yieldMany)
-import qualified Data.ByteString.Lazy as Lazy (readFile, writeFile)
 import qualified Data.Map as M
 import Data.Maybe (catMaybes)
 import System.Directory (doesDirectoryExist, doesFileExist, removeFile)
@@ -69,8 +68,8 @@ storeObject path = do
   if exists
     then return res
     else do
-      content <- Lazy.readFile path
-      Lazy.writeFile finalName content
+      content <- S.readFile path
+      writeFile finalName content
       return res
 
 indexRemoveCommand :: FilePath -> IO ()

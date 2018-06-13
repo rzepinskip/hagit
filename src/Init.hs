@@ -2,11 +2,11 @@ module Init
   ( initCommand
   ) where
 
+import qualified Data.Map as M
 import System.Directory (createDirectoryIfMissing, doesDirectoryExist)
 
-import Branch
+import Branch (initHead)
 import Commit (storeCommit)
-import qualified Data.Map as M
 import Utils
 
 -- | Initializes hagit repository in specified directory

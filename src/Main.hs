@@ -18,11 +18,11 @@ main = do
   action <- parseArgs args
   runAction action
 
-runAction :: HvcArgsResult -> IO ()
-runAction (HvcError e) = printError e
-runAction (HvcOperation op) = runOperation op
+runAction :: ArgsResult -> IO ()
+runAction (Error e) = printError e
+runAction (Operation op) = runOperation op
 
-runOperation :: HvcOperationType -> IO ()
+runOperation :: OperationType -> IO ()
 runOperation Init = initCommand
 runOperation (IndexAdd path) = indexAddCommand path
 runOperation (IndexRemove path) = indexRemoveCommand path
@@ -34,7 +34,7 @@ runOperation Log = logCommand
 runOperation Status = statusCommand
 runOperation Help = printHelp
 
-printError :: HvcErrorType -> IO ()
+printError :: ErrorType -> IO ()
 printError _ = putStrLn "There was an error"
 
 printHelp :: IO ()

@@ -9,7 +9,7 @@ import System.FilePath ((</>))
 
 import Branch (readHeadCommit, storeHeadCommit)
 import qualified Data.Map as M
-import Hashing
+import Hashing (bsToHex, hashString)
 import Index (loadIndex)
 import Utils
 
