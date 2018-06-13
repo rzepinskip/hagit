@@ -4,9 +4,12 @@ module Branch
   , createBranch
   , initHead
   , branchCommand
+  , createBranch
   ) where
 
+import Control.Monad (forM_)
 import Data.List (isPrefixOf)
+import System.Directory (listDirectory)
 import System.FilePath ((</>))
 import qualified System.IO.Strict as S (readFile)
 
@@ -14,13 +17,18 @@ import Utils
 
 type BranchName = String
 
-branchCommand :: String -> IO ()
-branchCommand name = execIfStore $ execBranch name
+branchCommand :: IO ()
+branchCommand = execIfStore listBranches
 
-execBranch :: BranchName -> IO ()
-execBranch name = do
-  hash <- readHeadCommit
-  createBranch name hash
+listBranches :: IO ()
+listBranches = do
+  branches <- listDirectory refsDir
+  headRef <- S.readFile headPath
+  forM_ branches $
+    (\name -> do
+       if ("refs" </> name == headRef)
+         then putStrLn $ "* " ++ name
+         else putStrLn $ " " ++ name)
 
 initBranchName :: BranchName
 initBranchName = "master"

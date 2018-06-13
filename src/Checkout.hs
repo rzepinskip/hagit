@@ -9,7 +9,7 @@ import System.Directory (createDirectoryIfMissing, doesFileExist, listDirectory)
 import System.FilePath ((</>), takeDirectory)
 import qualified System.IO.Strict as S (readFile)
 
-import Branch (storeHeadCommit)
+import Branch (createBranch, readHeadCommit, storeHeadCommit)
 import Commit (loadCommit)
 import Hashing (FileWithHash(..))
 import Utils
@@ -20,35 +20,48 @@ checkoutCommand param = execIfStore $ execCheckout param
 
 execCheckout :: String -> IO ()
 execCheckout param = do
-  isBranch <- isValidBranch param
-  if isBranch
+  isCommit <- isExistingCommit param
+  isBranch <- isExistingBranch param
+  if isCommit
     then do
-      lastCommit <- S.readFile $ refsDir </> param
-      writeFile headPath $ "refs" </> param
-      checkoutCommit lastCommit
-    else checkoutCommit param
+      hash <- checkoutCommit param
+      putStrLn $ "Checked out commit: " ++ hash
+    else if isBranch
+           then checkoutBranch param
+           else checkoutNewBranch param
 
-isValidBranch :: String -> IO Bool
-isValidBranch name = do
+isExistingCommit :: String -> IO Bool
+isExistingCommit name = doesFileExist $ commitsDir </> name
+
+isExistingBranch :: String -> IO Bool
+isExistingBranch name = do
   branches <- listDirectory refsDir
   return $ name `elem` branches
 
-checkoutCommit :: ShaHash -> IO ()
+checkoutBranch :: String -> IO ()
+checkoutBranch name = do
+  lastCommit <- S.readFile $ refsDir </> name
+  writeFile headPath $ "refs" </> name
+  _ <- checkoutCommit lastCommit
+  putStrLn $ "Checked out branch: " ++ name
+
+checkoutNewBranch :: String -> IO ()
+checkoutNewBranch name = do
+  hash <- readHeadCommit
+  createBranch name hash
+  writeFile headPath $ "refs" </> name
+
+checkoutCommit :: ShaHash -> IO ShaHash
 checkoutCommit hash = do
-  let commitFile = commitsDir </> hash
-  commitExists <- doesFileExist commitFile
-  if commitExists
+  commitFiles <- loadCommit $ commitsDir </> hash
+  hasObjects <- doesAllObjectsExist $ map getContentHash commitFiles
+  if hasObjects
     then do
-      commitFiles <- loadCommit commitFile
-      hasObjects <- doesAllObjectsExist $ map getContentHash commitFiles
-      if hasObjects
-        then do
-          runConduit $ yieldMany commitFiles .| mapM_C (liftIO . restoreObject)
-          restoreIndex commitFiles
-          storeHeadCommit hash
-          putStrLn $ "Checkout: checked out commit " ++ hash
-        else putStrLn "Checkout: unable to checkout commit: missing objects."
-    else putStrLn "Checkout: unable to checkout commit: commit not found."
+      runConduit $ yieldMany commitFiles .| mapM_C (liftIO . restoreObject)
+      restoreIndex commitFiles
+      storeHeadCommit hash
+      return hash
+    else return "Checkout: unable to checkout: missing objects."
 
 doesAllObjectsExist :: [ShaHash] -> IO Bool
 doesAllObjectsExist hashes = do

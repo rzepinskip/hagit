@@ -26,6 +26,7 @@ test-suite hagit-testsuite
                       Hashing,
                       Utils,
                       Diff,
+                      Branch,
                       ObjectsTests,
                       StatusTests,
                       DiffTests
@@ -59,7 +60,8 @@ executable hagit
                        Status,
                        Hashing,
                        Utils,
-                       Diff
+                       Diff,
+                       Branch
   build-depends:       base >= 4.7 && < 5,
                        cryptohash,
                        bytestring,
