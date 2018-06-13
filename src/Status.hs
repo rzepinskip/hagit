@@ -1,8 +1,11 @@
+{-# LANGUAGE PatternSynonyms #-}
+
 module Status
   ( statusCommand
+  , compareFiles
   ) where
 
-import Control.Monad (unless, when)
+import Control.Monad (unless)
 import qualified Data.Map as M
 import System.FilePath ((</>))
 
@@ -27,29 +30,48 @@ execStatus = do
 
 compareFiles :: [FileWithHash] -> [FileWithHash] -> [FileWithHash] -> IO ()
 compareFiles work index commit = do
-  let workMap = M.fromList (map toFileWithHashTuple work)
-  let indexMap = M.fromList (map toFileWithHashTuple index)
-  let commitMap = M.fromList (map toFileWithHashTuple commit)
-  printChanges "\nChanges to be committed:\n" "added:" indexMap commitMap
-  printChanges "\nChanges not staged for commit:\n" "deleted:" indexMap workMap
-  let unstaged = workMap `M.difference` indexMap
-  printMap "\nUntracked files:\n" unstaged
+  printDiffs "\nChanges to be committed:" $ getDiffs indexMap commitMap
+  let unstaged = getDiffs workMap indexMap
+  printDiffs "\nChanges not staged for commit:" $
+    filter (not . isAddition) unstaged
+  printDiffs "\nUntracked files:" $ filter isAddition unstaged
+  where
+    workMap = M.fromList (map toFileWithHashTuple work)
+    indexMap = M.fromList (map toFileWithHashTuple index)
+    commitMap = M.fromList (map toFileWithHashTuple commit)
 
-printChanges ::
-     String
-  -> String
+isAddition :: DiffOperation a -> Bool
+isAddition (Addition _) = True
+isAddition _ = False
+
+getDiffs ::
+     M.Map FilePath ObjectHash
   -> M.Map FilePath ObjectHash
-  -> M.Map FilePath ObjectHash
-  -> IO ()
-printChanges header differentLabel biggerMap smallerMap = do
-  let different = M.difference biggerMap smallerMap
-  let modified =
-        M.difference
-          (M.differenceWith handleEqualPaths biggerMap smallerMap)
-          different
-  when (not (null different) || not (null modified)) $ putStrLn header
-  printMapInlineHeader differentLabel different
-  printMapInlineHeader "modified:" modified
+  -> [DiffOperation FilePath]
+getDiffs a b =
+  (map (\path -> Addition path) added) ++
+  (map (\path -> Change path) modified) ++
+  (map (\path -> Deletion path) deleted)
+  where
+    added = M.keys $ M.difference a b
+    modified = M.keys $ M.differenceWith handleEqualPaths b $ M.intersection a b
+    deleted = M.keys $ M.difference b a
+
+data DiffOperation a
+  = Addition a
+  | Change a
+  | Deletion a
+  deriving (Show, Read, Eq, Ord)
+
+printDiffs :: String -> [DiffOperation FilePath] -> IO ()
+printDiffs header diffs = do
+  unless (null diffs) $ putStrLn $ header
+  mapM_ printDiff diffs
+
+printDiff :: DiffOperation FilePath -> IO ()
+printDiff (Addition path) = putStrLn $ "\t added:" ++ path
+printDiff (Change path) = putStrLn $ "\t modified:" ++ path
+printDiff (Deletion path) = putStrLn $ "\t deleted:" ++ path
 
 toFileWithHashTuple :: FileWithHash -> (FilePath, ObjectHash)
 toFileWithHashTuple file = (getPath file, getContentHash file)
@@ -59,14 +81,3 @@ handleEqualPaths a b =
   if a == b
     then Nothing
     else Just a
-
-printMapInlineHeader :: String -> M.Map FilePath ObjectHash -> IO ()
-printMapInlineHeader header filesMap = do
-  let paths =
-        map (\(path, _) -> "\t" ++ header ++ "\t" ++ path) $ M.toList filesMap
-  unless (null paths) $ putStr $ unlines paths
-
-printMap :: String -> M.Map FilePath ObjectHash -> IO ()
-printMap header filesMap = do
-  let paths = map (\(path, _) -> "\t" ++ path) $ M.toList filesMap
-  unless (null paths) $ putStrLn $ ((header ++ "\n") ++) $ unlines paths
