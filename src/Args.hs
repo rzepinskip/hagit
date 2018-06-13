@@ -17,7 +17,7 @@ module Args
 import System.Directory (doesDirectoryExist, getPermissions, readable, writable)
 import Utils
 
--- | Result of parsing spupplied arguments.
+-- | Result of parsing supplied arguments.
 data ArgsResult
   = Error ErrorType
   | Operation OperationType

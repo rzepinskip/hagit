@@ -1,9 +1,9 @@
 name:                hagit
 version:             0.1.0.0
-synopsis:            Basic version control system
+synopsis:            Version control system based on Git
 description:         Please see README.md
 homepage:            
-license:             GPL-3
+license:             BSD-3
 license-file:        LICENSE
 author:              Paweł Rzepiński
 copyright:           2018 Paweł Rzepiński
@@ -31,11 +31,11 @@ test-suite hagit-testsuite
                       StatusTests,
                       IndexTests
   build-depends:       base >= 4.7 && < 5,
-                            test-framework >= 0.3.3,
-                            test-framework-quickcheck2 >= 0.2.9,
+                            test-framework,
+                            test-framework-quickcheck2,
                             test-framework-hunit,
                             HUnit,
-                            QuickCheck >= 2.4.0.1,
+                            QuickCheck,
                             cryptohash,
                             bytestring,
                             directory,

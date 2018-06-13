@@ -1,6 +1,6 @@
 # hagit
 
-A basic version control system written in Haskell (learning project) inspiried by the Git protocol.
+A basic version control system written in Haskell based on the Git protocol.
 
 ## Installation
 
@@ -18,23 +18,23 @@ Assuming that the `hagit` binary is `./hagit`:
 $ ./hagit <command> [arguments]
 ```
 
-If developing, use:
+During development use:
 ```bash
 $ stack exec hagit <command> [arguments]
 ```
 
 Valid commands are:
 
-- `init`: initializes the project directory, which is needed to be able to run other `hagit` commands on it.
-- `commit`: stores all of the project's files in a commit, identified by a unique hash and a message, which must be passed as an additional argument.
-- `checkout`: restores the project directory to the state it was on a given commit.  A valid commit hash must be specified as an additional argument.
-- `log`: lists all commits in chronological order, showing hash, date and message for each one of them.
-- `add`: adds specified files or directory to staging area
-- `remove`: removes specified files or directory from staging area
-- `branch`: lists branches
-- `diff`: diffs files with versions in staging area; output like UNIX diff
+- `init`: initializes the project directory required to run other `hagit` commands on it.
+- `commit`: stores all of the project's files in a commit, identified by a unique hash and a message.
+- `checkout`: restores the project directory to the state of the given commit or branch. If supplied with nonexistent branch name - creates new branch. Potentially merges files content.
+- `log`: lists all commits in chronological order with hash, parent's hash, date and message.
+- `add`: adds specified files or directory to staging area.
+- `remove`: removes specified files or directory from staging area.
+- `branch`: lists branches.
+- `diff`: diffs files with versions in staging area; output like UNIX diff.
 - `status`: prints the current commit hash, and lists any new, deleted or modified in working tree, staging area and last commit.
-- `help`: displays help on how to operate `hagit`.
+- `help`: displays help.
 
 ## Used libraries
 
@@ -46,3 +46,9 @@ Valid commands are:
 - `conduit`: parallel file processing
 - `strict`: strict readFile operation
 - `Diff`: as a base for diff and merge operations
+
+## Attribution
+
+Initially based on hvc-master (https://github.com/federicotdn/hvc) by Federico T. 
+
+Diff code adapted from Data.Algorithm.DiffOutput module ((c) Sterling Clover 2008-2011, Kevin Charter 2011 - available at https://hub.darcs.net/sterlingclover/Diff/browse/src/Data/Algorithm/DiffOutput.hs)
