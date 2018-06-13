@@ -29,20 +29,20 @@ execCommit msg = do
 -- | Stores commit on disc
 storeCommit :: String -> [FileWithHash] -> IO ShaHash
 storeCommit msg index = do
-  let filesHashes = map getContentHash index
-  let commitHash = bsToHex . hashString $ concat filesHashes
-  storeCommitData msg commitHash index
+  commitHash <- storeCommitData msg index
   storeHeadCommit commitHash
   return commitHash
 
 -- | Stores commit information
-storeCommitData :: String -> ShaHash -> [FileWithHash] -> IO ()
-storeCommitData msg hash index = do
+storeCommitData :: String -> [FileWithHash] -> IO ShaHash
+storeCommitData msg index = do
   date <- getCurrentTime
   parentHash <- readHeadCommit
-  let info = show $ CommitInfo msg (show date) hash parentHash
-  let objects = show index
-  writeFile (commitsDir </> hash) (info ++ "\n" ++ objects)
+  let infoString = show $ CommitInfo msg (show date) parentHash
+  let filesHashes = map getContentHash index
+  let commitHash = bsToHex . hashString $ concat $ infoString : filesHashes
+  writeFile (commitsDir </> commitHash) (infoString ++ "\n" ++ (show index))
+  return commitHash
 
 loadCommit :: FilePath -> IO [FileWithHash]
 loadCommit path = do

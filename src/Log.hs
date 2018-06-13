@@ -17,23 +17,26 @@ logCommand = execIfStore execLog
 execLog :: IO ()
 execLog = do
   headRef <- S.readFile headPath
-  putStrLn $ "On: " ++ headRef
+  putStrLn $ "On: " ++ headRef ++ "\n"
   headCommit <- readHeadCommit
   parents <- traverseParents headCommit []
-  forM_ (reverse $ concat $ parents) $ \(CommitInfo msg date hash parentHash) -> do
-    putStrLn $ "commit " ++ hash
-    putStrLn $ ">>= parentHash: " ++ parentHash
-    putStrLn $ ">>= date: " ++ date
-    putStrLn $ ">>= message: " ++ msg
-    putStrLn ""
+  forM_ (reverse $ concat $ parents) printInfo
 
-traverseParents :: ShaHash -> [CommitInfo] -> IO (ShaHash, [CommitInfo])
-traverseParents "" parents = do
+printInfo :: (ShaHash, CommitInfo) -> IO ()
+printInfo (hash, info) = do
+  putStrLn $ "commit " ++ hash
+  putStrLn $ ">>= parentHash: " ++ (getParentHash info)
+  putStrLn $ ">>= date: " ++ (getDate info)
+  putStrLn $ ">>= message: " ++ (getMessage info)
   putStrLn ""
-  return ("", parents)
-traverseParents hash parents = do
+
+traverseParents ::
+     ShaHash -> [(ShaHash, CommitInfo)] -> IO (ShaHash, [(ShaHash, CommitInfo)])
+traverseParents "" acc = return ("", acc)
+traverseParents hash acc = do
   currentParent <- loadCommitInfo $ commitsDir </> hash
-  traverseParents (getParentHash currentParent) $ currentParent : parents
+  let parentHash = getParentHash currentParent
+  traverseParents (parentHash) $ (hash, currentParent) : acc
 
 loadCommitInfo :: FilePath -> IO CommitInfo
 loadCommitInfo path = withFile path ReadMode (fmap read . hGetLine)

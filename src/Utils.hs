@@ -24,7 +24,6 @@ import Hashing
 data CommitInfo = CommitInfo
   { getMessage :: String
   , getDate :: String
-  , getHash :: ShaHash
   , getParentHash :: ShaHash
   } deriving (Show, Read)
 

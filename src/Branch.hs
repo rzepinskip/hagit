@@ -28,7 +28,7 @@ listBranches = do
     (\name -> do
        if ("refs" </> name == headRef)
          then putStrLn $ "* " ++ name
-         else putStrLn $ " " ++ name)
+         else putStrLn $ "  " ++ name)
 
 initBranchName :: BranchName
 initBranchName = "master"
