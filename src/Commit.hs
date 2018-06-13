@@ -27,7 +27,7 @@ execCommit msg = do
       putStrLn $ "Commit hash: " ++ commitHash
 
 -- | Stores commit on disc
-storeCommit :: String -> [FileWithHash] -> IO ObjectHash
+storeCommit :: String -> [FileWithHash] -> IO ShaHash
 storeCommit msg index = do
   let filesHashes = map getContentHash index
   let commitHash = bsToHex . hashString $ concat filesHashes
@@ -36,7 +36,7 @@ storeCommit msg index = do
   return commitHash
 
 -- | Stores commit information
-storeCommitData :: String -> ObjectHash -> [FileWithHash] -> IO ()
+storeCommitData :: String -> ShaHash -> [FileWithHash] -> IO ()
 storeCommitData msg hash index = do
   date <- getCurrentTime
   parentHash <- readHeadCommit

@@ -33,7 +33,7 @@ isValidBranch name = do
   branches <- listDirectory refsDir
   return $ name `elem` branches
 
-checkoutCommit :: ObjectHash -> IO ()
+checkoutCommit :: ShaHash -> IO ()
 checkoutCommit hash = do
   let commitFile = commitsDir </> hash
   commitExists <- doesFileExist commitFile
@@ -50,7 +50,7 @@ checkoutCommit hash = do
         else putStrLn "Checkout: unable to checkout commit: missing objects."
     else putStrLn "Checkout: unable to checkout commit: commit not found."
 
-doesAllObjectsExist :: [ObjectHash] -> IO Bool
+doesAllObjectsExist :: [ShaHash] -> IO Bool
 doesAllObjectsExist hashes = do
   filesExist <- forM hashes $ \hash -> doesFileExist $ objectsDir </> hash
   return $ and filesExist

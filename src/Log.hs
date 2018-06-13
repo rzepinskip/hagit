@@ -27,7 +27,7 @@ execLog = do
     putStrLn $ ">>= message: " ++ msg
     putStrLn ""
 
-traverseParents :: ObjectHash -> [CommitInfo] -> IO (ObjectHash, [CommitInfo])
+traverseParents :: ShaHash -> [CommitInfo] -> IO (ShaHash, [CommitInfo])
 traverseParents "" parents = do
   putStrLn ""
   return ("", parents)

@@ -10,7 +10,7 @@ module Utils
   , printStoreDirError
   , execIfStore
   , CommitInfo(..)
-  , ObjectHash
+  , ShaHash
   ) where
 
 import Conduit ((.|), filterC, runConduitRes, sinkList, sourceDirectoryDeep)
@@ -24,8 +24,8 @@ import Hashing
 data CommitInfo = CommitInfo
   { getMessage :: String
   , getDate :: String
-  , getHash :: ObjectHash
-  , getParentHash :: ObjectHash
+  , getHash :: ShaHash
+  , getParentHash :: ShaHash
   } deriving (Show, Read)
 
 workingDir :: FilePath

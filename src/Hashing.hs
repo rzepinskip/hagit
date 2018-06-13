@@ -5,7 +5,7 @@ module Hashing
   , hashLazyBS
   , hashBS
   , bsToHex
-  , ObjectHash
+  , ShaHash
   , FileWithHash(..)
   ) where
 
@@ -15,11 +15,11 @@ import qualified Data.ByteString.Char8 as Strict8
 import qualified Data.ByteString.Lazy as Lazy
 import Text.Printf (printf)
 
-type ObjectHash = String
+type ShaHash = String
 
 data FileWithHash = FileWithHash
   { getPath :: FilePath
-  , getContentHash :: ObjectHash
+  , getContentHash :: ShaHash
   } deriving (Show, Read, Eq)
 
 bsToHex :: Strict.ByteString -> String
@@ -34,7 +34,7 @@ hashLazyBS = SHA1.hashlazy
 hashBS :: Strict.ByteString -> Strict.ByteString
 hashBS = SHA1.hash
 
-hashFile :: FilePath -> IO ObjectHash
+hashFile :: FilePath -> IO ShaHash
 hashFile path = do
   content <- Lazy.readFile path
   let hash = bsToHex $ hashLazyBS content

@@ -25,7 +25,7 @@ execBranch name = do
 initBranchName :: BranchName
 initBranchName = "master"
 
-createBranch :: BranchName -> ObjectHash -> IO ()
+createBranch :: BranchName -> ShaHash -> IO ()
 createBranch name hash = do
   writeFile (refsDir </> name) hash
 
@@ -34,14 +34,14 @@ initHead = do
   createBranch initBranchName ""
   writeFile headPath $ "refs" </> initBranchName
 
-readHeadCommit :: IO ObjectHash
+readHeadCommit :: IO ShaHash
 readHeadCommit = do
   headRef <- S.readFile headPath
   if "refs" `isPrefixOf` headRef
     then S.readFile $ hagitDir </> headRef
     else return headRef
 
-storeHeadCommit :: ObjectHash -> IO ()
+storeHeadCommit :: ShaHash -> IO ()
 storeHeadCommit hash = do
   headRef <- S.readFile headPath
   if "refs" `isPrefixOf` headRef

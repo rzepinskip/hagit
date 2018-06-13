@@ -47,8 +47,8 @@ isAddition (Addition _) = True
 isAddition _ = False
 
 getDiffs ::
-     M.Map FilePath ObjectHash
-  -> M.Map FilePath ObjectHash
+     M.Map FilePath ShaHash
+  -> M.Map FilePath ShaHash
   -> [DiffOperation FilePath]
 getDiffs a b =
   (map (\path -> Addition path) added) ++
@@ -75,10 +75,10 @@ printDiff (Addition path) = putStrLn $ "\t added:" ++ path
 printDiff (Change path) = putStrLn $ "\t modified:" ++ path
 printDiff (Deletion path) = putStrLn $ "\t deleted:" ++ path
 
-toFileWithHashTuple :: FileWithHash -> (FilePath, ObjectHash)
+toFileWithHashTuple :: FileWithHash -> (FilePath, ShaHash)
 toFileWithHashTuple file = (getPath file, getContentHash file)
 
-handleEqualPaths :: ObjectHash -> ObjectHash -> Maybe ObjectHash
+handleEqualPaths :: ShaHash -> ShaHash -> Maybe ShaHash
 handleEqualPaths a b =
   if a == b
     then Nothing
