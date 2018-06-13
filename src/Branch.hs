@@ -16,8 +16,9 @@ import Utils
 
 type BranchName = String
 
+-- | Lists existing branches
 branchCommand :: IO ()
-branchCommand = execIfStore listBranches
+branchCommand = executeIfInitialized listBranches
 
 listBranches :: IO ()
 listBranches = do
@@ -32,15 +33,21 @@ listBranches = do
 initBranchName :: BranchName
 initBranchName = "master"
 
+-- | Creates branch ref.
 createBranch :: BranchName -> ShaHash -> IO ()
 createBranch name hash = do
   writeFile (refsDir </> name) hash
 
+-- |Initalizes HEAD file with master branch.
 initHead :: IO ()
 initHead = do
   createBranch initBranchName ""
   writeFile headPath $ "refs" </> initBranchName
 
+-- | Reads commit ref from HEAD file. 
+-- Reference types:
+--    0ccd3a1dacc3aa196c00b847d0134dba9adc9094
+--    refs/master
 readHeadCommit :: IO ShaHash
 readHeadCommit = do
   headRef <- S.readFile headPath
@@ -48,6 +55,7 @@ readHeadCommit = do
     then S.readFile $ hagitDir </> headRef
     else return headRef
 
+-- | Stores ref to newest commit in HEAD file.
 storeHeadCommit :: ShaHash -> IO ()
 storeHeadCommit hash = do
   headRef <- S.readFile headPath

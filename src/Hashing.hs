@@ -13,12 +13,15 @@ import Text.Printf (printf)
 
 type ShaHash = String
 
+-- | Converts ByteString to its' hexadecimal representation.
 bsToHex :: Strict.ByteString -> String
 bsToHex bytes = concatMap (printf "%02x") (Strict.unpack bytes)
 
+-- | Hashes specified string using SHA1.
 hashString :: String -> Strict.ByteString
 hashString s = SHA1.hash $ Strict8.pack s
 
+-- | Hashes specified file using SHA1.
 hashFile :: FilePath -> IO ShaHash
 hashFile path = do
   content <- Lazy.readFile path

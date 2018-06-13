@@ -1,6 +1,5 @@
 module Checkout
   ( checkoutCommand
-  , restoreOrMergeFile
   ) where
 
 import Conduit ((.|), liftIO, mapM_C, runConduit, yieldMany)
@@ -12,13 +11,13 @@ import qualified System.IO.Strict as S (readFile)
 
 import Branch (createBranch, readHeadCommit, storeHeadCommit)
 import Commit (loadCommitObjects)
-import Diff (mergeFiles)
+import Diff (mergeFileWith)
 import Hashing (ShaHash)
 import Utils
 
--- | Checkouts commit with specified hash to particular directory
+-- | Checkouts commit with specified hash to working directory.
 checkoutCommand :: String -> IO ()
-checkoutCommand param = execIfStore $ execCheckout param
+checkoutCommand param = executeIfInitialized $ execCheckout param
 
 execCheckout :: String -> IO ()
 execCheckout param = do
@@ -57,7 +56,7 @@ checkoutNewBranch name = do
 
 checkoutCommit :: ShaHash -> IO ShaHash
 checkoutCommit hash = do
-  commitFiles <- loadCommitObjects $ commitsDir </> hash
+  commitFiles <- loadCommitObjects hash
   hasObjects <- doesAllObjectsExist $ M.elems commitFiles
   if hasObjects
     then do
@@ -84,7 +83,7 @@ restoreOrMergeFile :: FilePath -> FilePath -> IO ()
 restoreOrMergeFile sourcePath targetPath = do
   exists <- doesFileExist targetPath
   if exists
-    then mergeFiles targetPath sourcePath
+    then mergeFileWith targetPath sourcePath
     else do
       content <- S.readFile sourcePath
       writeFile targetPath content

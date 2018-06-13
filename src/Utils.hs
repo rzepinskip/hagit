@@ -8,7 +8,7 @@ module Utils
   , indexPath
   , readDirectoryRec
   , printStoreDirError
-  , execIfStore
+  , executeIfInitialized
   , CommitInfo(..)
   , ShaHash
   ) where
@@ -48,6 +48,7 @@ headPath = hagitDir </> "HEAD"
 indexPath :: FilePath
 indexPath = hagitDir </> "INDEX"
 
+-- | Recursively reads directory to retrieve all files.
 readDirectoryRec :: FilePath -> IO [FilePath]
 readDirectoryRec dir =
   runConduitRes $
@@ -68,8 +69,9 @@ hasStoreDir = do
   headExists <- doesFileExist $ hagitDir </> "HEAD"
   return (and $ headExists : dirsExist)
 
-execIfStore :: IO () -> IO ()
-execIfStore comp = do
+-- | Executes specified action only if hagit directory exists.
+executeIfInitialized :: IO () -> IO ()
+executeIfInitialized comp = do
   hagitEnabled <- hasStoreDir
   if hagitEnabled
     then comp

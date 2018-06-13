@@ -4,7 +4,7 @@
 -- available at https://hub.darcs.net/sterlingclover/Diff/browse/src/Data/Algorithm/DiffOutput.hs
 -----------------------------------------------------------------------------
 module Diff
-  ( mergeFiles
+  ( mergeFileWith
   , diffCommand
   ) where
 
@@ -20,8 +20,9 @@ import qualified System.IO.Strict as S (readFile)
 import Index (loadIndex)
 import Utils
 
+-- | Displays differnce between file's current content and data in staging area.
 diffCommand :: [FilePath] -> IO ()
-diffCommand paths = execIfStore $ execDiff paths
+diffCommand paths = executeIfInitialized $ execDiff paths
 
 execDiff :: [String] -> IO ()
 execDiff paths = do
@@ -37,8 +38,9 @@ diffFile path = do
   putStrLn $
     ppDiff $ getGroupedDiff (lines currentContent) (lines indexedContent)
 
-mergeFiles :: FilePath -> FilePath -> IO ()
-mergeFiles current merged = do
+-- | Merges content of second file into first one.
+mergeFileWith :: FilePath -> FilePath -> IO ()
+mergeFileWith current merged = do
   newContent <- getFileDiffs current merged
   writeFile current newContent
 

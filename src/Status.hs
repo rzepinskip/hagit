@@ -6,7 +6,6 @@ module Status
 
 import Control.Monad (unless)
 import qualified Data.Map as M
-import System.FilePath ((</>))
 
 import Branch (readHeadCommit)
 import Commit (loadCommitObjects)
@@ -14,9 +13,9 @@ import Hashing (hashFile)
 import Index (loadIndex)
 import Utils
 
--- | Prints status of work repository - new/modified/deleted files in comparison to latest commit
+-- | Prints out the status of files - new/modified/deleted files in working directory/staging area/newest commit
 statusCommand :: IO ()
-statusCommand = execIfStore execStatus
+statusCommand = executeIfInitialized execStatus
 
 execStatus :: IO ()
 execStatus = do
@@ -26,7 +25,7 @@ execStatus = do
   putStrLn $ "HEAD: " ++ commitHead
   indexFiles <- loadIndex
   headFile <- readHeadCommit
-  committedFiles <- loadCommitObjects $ commitsDir </> headFile
+  committedFiles <- loadCommitObjects headFile
   compareFiles workFiles indexFiles committedFiles
 
 toFilePathWithHashTuple :: FilePath -> IO (FilePath, ShaHash)

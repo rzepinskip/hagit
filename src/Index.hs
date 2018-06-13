@@ -14,10 +14,17 @@ import System.FilePath ((</>), joinPath, splitPath)
 import qualified System.IO.Strict as S (readFile)
 
 import Hashing (ShaHash, hashFile)
-import Utils (execIfStore, indexPath, objectsDir, readDirectoryRec, workingDir)
+import Utils
+  ( executeIfInitialized
+  , indexPath
+  , objectsDir
+  , readDirectoryRec
+  , workingDir
+  )
 
+-- | Add specified file/dir to staging area
 indexAddCommand :: FilePath -> IO ()
-indexAddCommand path = execIfStore (addPathToIndex path)
+indexAddCommand path = executeIfInitialized (addPathToIndex path)
 
 addPathToIndex :: FilePath -> IO ()
 addPathToIndex path = do
@@ -27,18 +34,20 @@ addPathToIndex path = do
   let updatedIndex = mergeIndexWith index work
   writeFile indexPath $ show updatedIndex
 
-mergeIndexWith ::
-     M.Map FilePath ShaHash -> [(FilePath, ShaHash)] -> M.Map FilePath ShaHash
-mergeIndexWith index work = M.union workMap index
-  where
-    workMap = M.fromList work
-
+-- | Loads content of staging area.
 loadIndex :: IO (M.Map FilePath ShaHash)
 loadIndex = do
   contents <- S.readFile indexPath
   if not (null contents)
     then return $ read $ head (lines contents)
     else return M.empty
+
+-- | Merges specified files into staging area.
+mergeIndexWith ::
+     M.Map FilePath ShaHash -> [(FilePath, ShaHash)] -> M.Map FilePath ShaHash
+mergeIndexWith index work = M.union workMap index
+  where
+    workMap = M.fromList work
 
 readFilesFromPath :: FilePath -> IO [FilePath]
 readFilesFromPath path = do
@@ -72,8 +81,9 @@ storeObject path = do
       writeFile finalName content
       return res
 
+-- | Removes specified file/dir from staging area.
 indexRemoveCommand :: FilePath -> IO ()
-indexRemoveCommand path = execIfStore (removePathsFromIndex path)
+indexRemoveCommand path = executeIfInitialized (removePathsFromIndex path)
 
 removePathsFromIndex :: FilePath -> IO ()
 removePathsFromIndex path = do
@@ -83,6 +93,7 @@ removePathsFromIndex path = do
   runConduit $ yieldMany removedHashes .| mapM_C removeObject
   let updatedIndex = removeFromIndex index removedFiles
   writeFile indexPath $ show $ updatedIndex
+  -- | Removes specified files from staging area.
 
 removeFromIndex ::
      M.Map FilePath ShaHash -> [FilePath] -> M.Map FilePath ShaHash

@@ -13,9 +13,9 @@ import Hashing (bsToHex, hashString)
 import Index (loadIndex)
 import Utils
 
--- | Commits all files in directory with specified message.
+-- | Commits currently staged files with specified message.
 commitCommand :: String -> IO ()
-commitCommand msg = execIfStore $ execCommit msg
+commitCommand msg = executeIfInitialized $ execCommit msg
 
 execCommit :: String -> IO ()
 execCommit msg = do
@@ -27,14 +27,14 @@ execCommit msg = do
       putStrLn "Commit successful."
       putStrLn $ "Commit hash: " ++ commitHash
 
--- | Stores commit on disc
+-- | Stores commit with specified message and using staged files.
 storeCommit :: String -> M.Map FilePath ShaHash -> IO ShaHash
 storeCommit msg index = do
   commitHash <- storeCommitData msg index
   storeHeadCommit commitHash
   return commitHash
 
--- | Stores commit information
+-- | Stores commit information.
 storeCommitData :: String -> M.Map FilePath ShaHash -> IO ShaHash
 storeCommitData msg index = do
   date <- getCurrentTime
@@ -45,8 +45,9 @@ storeCommitData msg index = do
   writeFile (commitsDir </> commitHash) (infoString ++ "\n" ++ (show index))
   return commitHash
 
-loadCommitObjects :: FilePath -> IO (M.Map FilePath ShaHash)
-loadCommitObjects path = do
-  contents <- readFile path
+-- | Loads specified commits' objects.
+loadCommitObjects :: ShaHash -> IO (M.Map FilePath ShaHash)
+loadCommitObjects hash = do
+  contents <- readFile $ commitsDir </> hash
   let line = lines contents !! 1
   return $ read line

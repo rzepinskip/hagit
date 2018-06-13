@@ -10,9 +10,9 @@ import qualified System.IO.Strict as S (readFile)
 import Branch (readHeadCommit)
 import Utils
 
--- | Prints log - list of all commits of the repository in specified directory
+-- | Prints log - list of all commits of the repository in working directory
 logCommand :: IO ()
-logCommand = execIfStore execLog
+logCommand = executeIfInitialized execLog
 
 execLog :: IO ()
 execLog = do

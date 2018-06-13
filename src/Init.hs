@@ -9,7 +9,7 @@ import Branch (initHead)
 import Commit (storeCommit)
 import Utils
 
--- | Initializes hagit repository in specified directory
+-- | Initializes hagit repository in working directory
 initCommand :: IO ()
 initCommand = do
   exists <- doesDirectoryExist hagitDir
