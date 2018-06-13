@@ -3,6 +3,7 @@ module Main where
 import System.Environment
 
 import Args
+import Branch
 import Checkout
 import Commit
 import Index
@@ -25,8 +26,9 @@ runOperation Init = initCommand
 runOperation (IndexAdd path) = indexAddCommand path
 runOperation (IndexRemove path) = indexRemoveCommand path
 runOperation (Commit msg) = commitCommand msg
-runOperation Log = logCommand
 runOperation (Checkout commit) = checkoutCommand commit
+runOperation (Branch name) = branchCommand name
+runOperation Log = logCommand
 runOperation Status = statusCommand
 runOperation Help = printHelp
 

@@ -4,6 +4,7 @@ module Init
 
 import System.Directory (createDirectoryIfMissing, doesDirectoryExist)
 
+import Branch
 import Commit (storeCommit)
 import Utils
 
@@ -14,8 +15,10 @@ initCommand = do
   if exists
     then putStrLn "Directory is already initialized."
     else do
-      createDirectoryIfMissing True objectsDir
+      createDirectoryIfMissing True refsDir
       createDirectoryIfMissing True commitsDir
+      createDirectoryIfMissing True objectsDir
       writeFile indexPath ""
+      initHead
       _ <- storeCommit "Initial commit." []
       putStrLn "Init: directory initialized."

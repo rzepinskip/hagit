@@ -1,16 +1,14 @@
 module Utils
   ( workingDir
   , hagitDir
+  , refsDir
   , commitsDir
   , objectsDir
   , headPath
   , indexPath
   , readDirectoryRec
   , printStoreDirError
-  , readCommitHead
-  , storeCommitHead
   , execIfStore
-  , loadCommit
   , CommitInfo(..)
   , ObjectHash
   ) where
@@ -20,7 +18,6 @@ import Control.Monad (forM)
 import Data.List (isPrefixOf)
 import System.Directory (doesDirectoryExist, doesFileExist)
 import System.FilePath ((</>))
-import qualified System.IO.Strict as S (readFile)
 
 import Hashing
 
@@ -37,6 +34,9 @@ workingDir = "."
 hagitDir :: FilePath
 hagitDir = workingDir </> ".hagit"
 
+refsDir :: FilePath
+refsDir = hagitDir </> "refs"
+
 commitsDir :: FilePath
 commitsDir = hagitDir </> "commits"
 
@@ -48,23 +48,6 @@ headPath = hagitDir </> "HEAD"
 
 indexPath :: FilePath
 indexPath = hagitDir </> "INDEX"
-
-readCommitHead :: IO String
-readCommitHead = do
-  fileExist <- doesFileExist headPath
-  if not fileExist
-    then return ""
-    else S.readFile headPath
-
--- | Updates the HEAD file with specified commit    
-storeCommitHead :: ObjectHash -> IO ()
-storeCommitHead = writeFile headPath
-
-loadCommit :: FilePath -> IO [FileWithHash]
-loadCommit path = do
-  contents <- readFile path
-  let line = lines contents !! 1
-  return $ read line
 
 readDirectoryRec :: FilePath -> IO [FilePath]
 readDirectoryRec dir =

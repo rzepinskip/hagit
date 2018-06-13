@@ -9,6 +9,8 @@ import Control.Monad (unless)
 import qualified Data.Map as M
 import System.FilePath ((</>))
 
+import Branch (readHeadCommit)
+import Commit (loadCommit)
 import Hashing
 import Index (loadIndex)
 import Utils
@@ -21,10 +23,10 @@ execStatus :: IO ()
 execStatus = do
   files <- readDirectoryRec workingDir
   workFiles <- mapM toFileWithHash files
-  commitHead <- readCommitHead
+  commitHead <- readHeadCommit
   putStrLn $ "HEAD: " ++ commitHead
   indexFiles <- loadIndex
-  headFile <- readCommitHead
+  headFile <- readHeadCommit
   committedFiles <- loadCommit $ commitsDir </> headFile
   compareFiles workFiles indexFiles committedFiles
 

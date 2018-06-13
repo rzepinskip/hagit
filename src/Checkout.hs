@@ -8,12 +8,14 @@ import qualified Data.ByteString.Lazy as Lazy
 import System.Directory (createDirectoryIfMissing, doesFileExist)
 import System.FilePath ((</>), takeDirectory)
 
+import Branch (storeHeadCommit)
+import Commit (loadCommit)
 import Hashing (FileWithHash(..))
 import Utils
 
 -- | Checkouts commit with specified hash to particular directory
 checkoutCommand :: ObjectHash -> IO ()
-checkoutCommand = execCheckout
+checkoutCommand hash = execIfStore $ execCheckout hash
 
 execCheckout :: ObjectHash -> IO ()
 execCheckout hash = do
@@ -27,7 +29,7 @@ execCheckout hash = do
         then do
           runConduit $ yieldMany commitFiles .| mapM_C (liftIO . restoreObject)
           restoreIndex commitFiles
-          storeCommitHead hash
+          storeHeadCommit hash
           putStrLn $ "Checkout: checked out commit " ++ hash
         else putStrLn "Checkout: unable to checkout commit: missing objects."
     else putStrLn "Checkout: unable to checkout commit: commit not found."

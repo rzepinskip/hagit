@@ -20,10 +20,11 @@ data HvcOperationType
   | IndexAdd FilePath
   | IndexRemove FilePath
   | Commit String
-  | Help
   | Checkout String
+  | Branch String
   | Log
   | Status
+  | Help
 
 strToSimpleOp :: String -> HvcOperationType
 strToSimpleOp "log" = Log
@@ -36,6 +37,7 @@ strToCompoundOp "checkout" param = Checkout param
 strToCompoundOp "add" param = IndexAdd param
 strToCompoundOp "remove" param = IndexRemove param
 strToCompoundOp "commit" param = Commit param
+strToCompoundOp "branch" param = Branch param
 strToCompoundOp _ _ = Help
 
 strToOp :: String -> Maybe String -> HvcOperationType
