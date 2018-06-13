@@ -31,6 +31,8 @@ Valid commands are:
 - `log`: lists all commits in chronological order, showing hash, date and message for each one of them.
 - `add`: adds specified files or directory to staging area
 - `remove`: removes specified files or directory from staging area
+- `branch`: lists branches
+- `diff`: diffs files with versions in staging area; output like UNIX diff
 - `status`: prints the current commit hash, and lists any new, deleted or modified in working tree, staging area and last commit.
 - `help`: displays help on how to operate `hagit`.
 

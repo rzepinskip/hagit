@@ -29,7 +29,7 @@ test-suite hagit-testsuite
                       Branch,
                       ObjectsTests,
                       StatusTests,
-                      DiffTests
+                      IndexTests
   build-depends:       base >= 4.7 && < 5,
                             test-framework >= 0.3.3,
                             test-framework-quickcheck2 >= 0.2.9,

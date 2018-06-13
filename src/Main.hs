@@ -39,7 +39,7 @@ printError _ = putStrLn "There was an error"
 
 printHelp :: IO ()
 printHelp = do
-  putStrLn "Usage: hagit <operation> [options]"
+  putStrLn "Usage: hagit <operation> [params]"
   putStrLn
-    "Valid operations are: init, commit, checkout, log, add, remove, status, help"
+    "Valid operations are: init, commit, checkout, log, add, remove, status, branch, diff, help"
   putStrLn "See README.md for more details."

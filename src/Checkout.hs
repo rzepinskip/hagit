@@ -50,6 +50,7 @@ checkoutNewBranch :: String -> IO ()
 checkoutNewBranch name = do
   hash <- readHeadCommit
   createBranch name hash
+  _ <- checkoutCommit hash
   writeFile headPath $ "refs" </> name
 
 checkoutCommit :: ShaHash -> IO ShaHash

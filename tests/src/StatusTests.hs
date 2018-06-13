@@ -19,9 +19,9 @@ test :: Test
 test =
   testGroup
     "Status"
-    [ testCase "staged_1" staged_1
-    , testCase "unstaged_1" unstaged_1
-    , testCase "untracked_1" untracked_1
+    [ testCase "Staged files" staged_1
+    , testCase "Unstaged files" unstaged_1
+    , testCase "Untracked files" untracked_1
     ]
 
 test_1_commit =
@@ -34,22 +34,22 @@ test_1_work =
   "fromList [(\"./a\",\"2295134321d1047818bcbd080f571c772398039a\"), (\"./c\",\"70949e558320376aaac23634010f7e74248dbbf4\"), (\"./d\",\"67135a3e47a5da5691f94104f20053d3eaa6ad33\")]"
 
 staged_1 = do
-  let staged = getDiffs indexMap commitMap
-  H.assertEqual "Staged" "[Addition \"./c\",Change \"./b\"]" (show $ staged)
+  let staged = getDiffs index commitMap
+  H.assertEqual [] (read "[Addition \"./c\",Change \"./b\"]") staged
   where
-    indexMap = read test_1_index
+    index = read test_1_index
     commitMap = read test_1_commit
 
 unstaged_1 = do
-  let unstaged = filter (not . isAddition) $ getDiffs workMap indexMap
-  H.assertEqual "Staged" "[Change \"./a\",Deletion \"./b\"]" (show $ unstaged)
+  let unstaged = filter (not . isAddition) $ getDiffs workMap index
+  H.assertEqual [] (read "[Change \"./a\",Deletion \"./b\"]") unstaged
   where
     workMap = read test_1_work
-    indexMap = read test_1_index
+    index = read test_1_index
 
 untracked_1 = do
-  let untracked = filter (isAddition) $ getDiffs workMap indexMap
-  H.assertEqual "Untracked" "[Addition \"./d\"]" (show $ untracked)
+  let untracked = filter (isAddition) $ getDiffs workMap index
+  H.assertEqual [] (read "[Addition \"./d\"]") untracked
   where
     workMap = read test_1_work
-    indexMap = read test_1_index
+    index = read test_1_index

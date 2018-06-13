@@ -2,6 +2,8 @@ module Index
   ( indexAddCommand
   , indexRemoveCommand
   , loadIndex
+  , mergeIndexWith
+  , removeFromIndex
   ) where
 
 import Conduit ((.|), liftIO, mapMC, mapM_C, runConduit, sinkList, yieldMany)
@@ -20,21 +22,17 @@ indexAddCommand path = execIfStore (addPathToIndex path)
 
 addPathToIndex :: FilePath -> IO ()
 addPathToIndex path = do
-  indexMap <- loadIndex
+  index <- loadIndex
   workFilesPaths <- readFilesFromPath path
   work <- storeObjects workFilesPaths
-  let workMap = M.fromList work
-  let updatedIndex =
-        M.union
-          (M.intersection workMap indexMap)
-          (M.differenceWith handleEqualPaths workMap indexMap)
+  let updatedIndex = mergeIndexWith index work
   writeFile indexPath $ show updatedIndex
 
-handleEqualPaths :: ShaHash -> ShaHash -> Maybe ShaHash
-handleEqualPaths a b =
-  if a == b
-    then Nothing
-    else Just a
+mergeIndexWith ::
+     M.Map FilePath ShaHash -> [(FilePath, ShaHash)] -> M.Map FilePath ShaHash
+mergeIndexWith index work = M.union workMap index
+  where
+    workMap = M.fromList work
 
 loadIndex :: IO (M.Map FilePath ShaHash)
 loadIndex = do
@@ -76,16 +74,22 @@ storeObject path = do
       return res
 
 indexRemoveCommand :: FilePath -> IO ()
-indexRemoveCommand path = execIfStore (removePathFromIndex path)
+indexRemoveCommand path = execIfStore (removePathsFromIndex path)
 
-removePathFromIndex :: FilePath -> IO ()
-removePathFromIndex path = do
+removePathsFromIndex :: FilePath -> IO ()
+removePathsFromIndex path = do
   index <- loadIndex
   removedFiles <- readFilesFromPath path
   let removedHashes = catMaybes $ map (`M.lookup` index) removedFiles
   runConduit $ yieldMany removedHashes .| mapM_C removeObject
-  let updatedIndex = map (`M.delete` index) removedFiles
-  writeFile indexPath $ show updatedIndex
+  let updatedIndex = removeFromIndex index removedFiles
+  writeFile indexPath $ show $ updatedIndex
+
+removeFromIndex ::
+     M.Map FilePath ShaHash -> [FilePath] -> M.Map FilePath ShaHash
+removeFromIndex index paths = M.difference index pathsMap
+  where
+    pathsMap = M.fromList $ zip paths [[] | _ <- [1 ..]]
 
 removeObject :: ShaHash -> IO ()
 removeObject hash = removeFile $ objectsDir </> hash
