@@ -1,3 +1,12 @@
+{-|
+Module      : Utils
+Description : Utility functions - mostly directories handling.
+Copyright   : (c) Paweł Rzepiński 2018
+License     :  BSD 3
+Maintainer  : rzepinski.pawel@email.com
+Stability   : experimental
+Portability : POSIX
+-}
 module Utils
   ( workingDir
   , hagitDir
@@ -19,32 +28,40 @@ import Data.List (isPrefixOf)
 import System.Directory (doesDirectoryExist, doesFileExist)
 import System.FilePath ((</>))
 
-import Hashing
+import Hashing (ShaHash)
 
+-- | Commit details
 data CommitInfo = CommitInfo
   { getMessage :: String
   , getDate :: String
   , getParentHash :: ShaHash
   } deriving (Show, Read)
 
+-- | Returns working directory.
 workingDir :: FilePath
 workingDir = "."
 
+-- | Returns hagit directory.
 hagitDir :: FilePath
 hagitDir = workingDir </> ".hagit"
 
+-- | Returns references directory.
 refsDir :: FilePath
 refsDir = hagitDir </> "refs"
 
+-- | Returns commits directory.
 commitsDir :: FilePath
 commitsDir = hagitDir </> "commits"
 
+-- | Returns objects directory.
 objectsDir :: FilePath
 objectsDir = hagitDir </> "objects"
 
+-- | Returns path to HEAD file.
 headPath :: FilePath
 headPath = hagitDir </> "HEAD"
 
+-- | Returns path to INDEX file. Also know as staging area.
 indexPath :: FilePath
 indexPath = hagitDir </> "INDEX"
 
@@ -58,6 +75,7 @@ isValidPath :: FilePath -> Bool
 isValidPath path =
   not $ any (`isPrefixOf` path) ["./.hagit", "./.git", "./.stack-work"]
 
+-- | Prints out hagit directory errors.
 printStoreDirError :: IO ()
 printStoreDirError =
   putStrLn "Unable to perform operation: hagit directory (.hagit) not found."

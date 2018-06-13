@@ -1,3 +1,12 @@
+{-|
+Module      : Index
+Description : Manages index(staging area) - adds/removes items
+Copyright   : (c) Paweł Rzepiński 2018
+License     :  BSD 3
+Maintainer  : rzepinski.pawel@email.com
+Stability   : experimental
+Portability : POSIX
+-}
 module Index
   ( indexAddCommand
   , indexRemoveCommand
@@ -13,14 +22,8 @@ import System.Directory (doesDirectoryExist, doesFileExist, removeFile)
 import System.FilePath ((</>), joinPath, splitPath)
 import qualified System.IO.Strict as S (readFile)
 
-import Hashing (ShaHash, hashFile)
+import Hashing (hashFile)
 import Utils
-  ( executeIfInitialized
-  , indexPath
-  , objectsDir
-  , readDirectoryRec
-  , workingDir
-  )
 
 -- | Add specified file/dir to staging area
 indexAddCommand :: FilePath -> IO ()
@@ -93,8 +96,8 @@ removePathsFromIndex path = do
   runConduit $ yieldMany removedHashes .| mapM_C removeObject
   let updatedIndex = removeFromIndex index removedFiles
   writeFile indexPath $ show $ updatedIndex
-  -- | Removes specified files from staging area.
 
+-- | Removes specified files from staging area.
 removeFromIndex ::
      M.Map FilePath ShaHash -> [FilePath] -> M.Map FilePath ShaHash
 removeFromIndex index paths = M.difference index pathsMap

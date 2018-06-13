@@ -1,3 +1,12 @@
+{-|
+Module      : Commit
+Description : Commits currently staged files with specified message or loads/stores commit data.
+Copyright   : (c) Paweł Rzepiński 2018
+License     :  BSD 3
+Maintainer  : rzepinski.pawel@email.com
+Stability   : experimental
+Portability : POSIX
+-}
 module Commit
   ( commitCommand
   , storeCommit

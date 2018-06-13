@@ -1,3 +1,12 @@
+{-|
+Module      : Hashing
+Description : Exports functions for hashing with SHA1
+Copyright   : (c) Paweł Rzepiński 2018
+License     :  BSD 3
+Maintainer  : rzepinski.pawel@email.com
+Stability   : experimental
+Portability : POSIX
+-}
 module Hashing
   ( hashFile
   , hashString
@@ -11,6 +20,7 @@ import qualified Data.ByteString.Char8 as Strict8
 import qualified Data.ByteString.Lazy as Lazy
 import Text.Printf (printf)
 
+-- | SHA1 hash
 type ShaHash = String
 
 -- | Converts ByteString to its' hexadecimal representation.

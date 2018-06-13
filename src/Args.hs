@@ -1,3 +1,12 @@
+{-|
+Module      : Args
+Description : Handles command line arguments parsing
+Copyright   : (c) Paweł Rzepiński 2018
+License     :  BSD 3
+Maintainer  : rzepinski.pawel@email.com
+Stability   : experimental
+Portability : POSIX
+-}
 module Args
   ( ArgsResult(..)
   , ErrorType(..)
@@ -8,13 +17,16 @@ module Args
 import System.Directory (doesDirectoryExist, getPermissions, readable, writable)
 import Utils
 
+-- | Result of parsing spupplied arguments.
 data ArgsResult
   = Error ErrorType
   | Operation OperationType
 
+-- | Encountered error type.
 newtype ErrorType =
   DirError String
 
+-- | Type of program command.
 data OperationType
   = Init
   | IndexAdd FilePath

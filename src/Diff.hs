@@ -1,8 +1,12 @@
------------------------------------------------------------------------------
--- Based on Data.Algorithm.DiffOutput module
---  ((c) Sterling Clover 2008-2011, Kevin Charter 2011) 
--- available at https://hub.darcs.net/sterlingclover/Diff/browse/src/Data/Algorithm/DiffOutput.hs
------------------------------------------------------------------------------
+{-|
+Module      : Diff
+Description : Exports functions to diff and merge files.
+Copyright   : (c) Paweł Rzepiński 2018
+License     :  BSD 3
+Maintainer  : rzepinski.pawel@email.com
+Stability   : experimental
+Portability : POSIX
+-}
 module Diff
   ( mergeFileWith
   , diffCommand
@@ -59,6 +63,11 @@ getFileDiffs current merged = do
           (concatMap (concatDiffs currentName mergedName) lineDiffs)
   return res
 
+-----------------------------------------------------------------------------
+-- Based on Data.Algorithm.DiffOutput module
+--  ((c) Sterling Clover 2008-2011, Kevin Charter 2011) 
+-- available at https://hub.darcs.net/sterlingclover/Diff/browse/src/Data/Algorithm/DiffOutput.hs
+-----------------------------------------------------------------------------
 -- | Line number alias
 type LineNo = Int
 

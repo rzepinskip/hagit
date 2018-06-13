@@ -1,3 +1,12 @@
+{-|
+Module      : Main
+Description : Entry point module
+Copyright   : (c) Paweł Rzepiński 2018
+License     :  BSD 3
+Maintainer  : rzepinski.pawel@email.com
+Stability   : experimental
+Portability : POSIX
+-}
 module Main where
 
 import System.Environment

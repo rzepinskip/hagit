@@ -1,5 +1,14 @@
 {-# LANGUAGE PatternSynonyms #-}
 
+{-|
+Module      : Status
+Description : Prints out the status of files - new/modified/deleted files in working directory/staging area/newest commit
+Copyright   : (c) Paweł Rzepiński 2018
+License     :  BSD 3
+Maintainer  : rzepinski.pawel@email.com
+Stability   : experimental
+Portability : POSIX
+-}
 module Status
   ( statusCommand
   ) where

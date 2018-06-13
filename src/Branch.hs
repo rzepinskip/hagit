@@ -1,3 +1,12 @@
+{-|
+Module      : Branch
+Description : Handles branching - creating a branch, synchronizing refs with HEAD
+Copyright   : (c) Paweł Rzepiński 2018
+License     :  BSD 3
+Maintainer  : rzepinski.pawel@email.com
+Stability   : experimental
+Portability : POSIX
+-}
 module Branch
   ( readHeadCommit
   , storeHeadCommit
