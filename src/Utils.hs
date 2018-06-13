@@ -24,8 +24,8 @@ import Hashing
 data CommitInfo = CommitInfo
   { getMessage :: String
   , getDate :: String
-  , getHash :: String
-  , getParentHash :: String
+  , getHash :: ObjectHash
+  , getParentHash :: ObjectHash
   } deriving (Show, Read)
 
 workingDir :: FilePath
