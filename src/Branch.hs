@@ -29,10 +29,6 @@ createBranch :: BranchName -> ObjectHash -> IO ()
 createBranch name hash = do
   writeFile (refsDir </> name) hash
 
-updateBranch :: BranchName -> ObjectHash -> IO ()
-updateBranch name hash = do
-  writeFile (refsDir </> name) hash
-
 initHead :: IO ()
 initHead = do
   createBranch initBranchName ""

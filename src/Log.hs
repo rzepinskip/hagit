@@ -5,9 +5,10 @@ module Log
 import Control.Monad (forM, forM_)
 import Data.List
 import Data.Time.Clock (UTCTime)
-import System.Directory (getDirectoryContents)
+import System.Directory (listDirectory)
 import System.FilePath (combine)
 import System.IO (IOMode(..), hGetLine, withFile)
+import qualified System.IO.Strict as S (readFile)
 
 import Utils
 
@@ -17,6 +18,8 @@ logCommand = execIfStore execLog
 
 execLog :: IO ()
 execLog = do
+  headRef <- S.readFile headPath
+  putStrLn $ "On: " ++ headRef ++ "\n"
   paths <- getCommitPaths
   sortedCommits <- loadSortedCommits paths
   forM_ sortedCommits $ \(CommitInfo msg date hash parentHash) -> do
@@ -29,8 +32,8 @@ execLog = do
 getCommitPaths :: IO [FilePath]
 getCommitPaths = do
   let commitDir = commitsDir
-  commits <- getDirectoryContents commitDir
-  return $ map (combine commitDir) $ filter (`notElem` [".", ".."]) commits
+  commits <- listDirectory commitDir
+  return $ map (combine commitDir) commits
 
 loadSortedCommits :: [FilePath] -> IO [CommitInfo]
 loadSortedCommits paths = do

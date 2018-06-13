@@ -5,8 +5,9 @@ module Checkout
 import Conduit ((.|), liftIO, mapM_C, runConduit, yieldMany)
 import Control.Monad (forM)
 import qualified Data.ByteString.Lazy as Lazy
-import System.Directory (createDirectoryIfMissing, doesFileExist)
+import System.Directory (createDirectoryIfMissing, doesFileExist, listDirectory)
 import System.FilePath ((</>), takeDirectory)
+import qualified System.IO.Strict as S (readFile)
 
 import Branch (storeHeadCommit)
 import Commit (loadCommit)
@@ -14,11 +15,26 @@ import Hashing (FileWithHash(..))
 import Utils
 
 -- | Checkouts commit with specified hash to particular directory
-checkoutCommand :: ObjectHash -> IO ()
-checkoutCommand hash = execIfStore $ execCheckout hash
+checkoutCommand :: String -> IO ()
+checkoutCommand param = execIfStore $ execCheckout param
 
-execCheckout :: ObjectHash -> IO ()
-execCheckout hash = do
+execCheckout :: String -> IO ()
+execCheckout param = do
+  isBranch <- isValidBranch param
+  if isBranch
+    then do
+      lastCommit <- S.readFile $ refsDir </> param
+      writeFile headPath $ "refs" </> param
+      checkoutCommit lastCommit
+    else checkoutCommit param
+
+isValidBranch :: String -> IO Bool
+isValidBranch name = do
+  branches <- listDirectory refsDir
+  return $ name `elem` branches
+
+checkoutCommit :: ObjectHash -> IO ()
+checkoutCommit hash = do
   let commitFile = commitsDir </> hash
   commitExists <- doesFileExist commitFile
   if commitExists
