@@ -43,4 +43,4 @@ Valid commands are:
 - `time`: handling commit's date and time
 - `conduit`: parallel file processing
 - `strict`: strict readFile operation
-- `Diff`: as a base for diff and mergeoperations
+- `Diff`: as a base for diff and merge operations

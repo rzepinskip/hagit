@@ -5,13 +5,14 @@ module Checkout
 import Conduit ((.|), liftIO, mapM_C, runConduit, yieldMany)
 import Control.Monad (forM)
 import qualified Data.ByteString.Lazy as Lazy
+import qualified Data.Map as M
 import System.Directory (createDirectoryIfMissing, doesFileExist, listDirectory)
 import System.FilePath ((</>), takeDirectory)
 import qualified System.IO.Strict as S (readFile)
 
 import Branch (createBranch, readHeadCommit, storeHeadCommit)
-import Commit (loadCommit)
-import Hashing (FileWithHash(..))
+import Commit (loadCommitObjects)
+import Hashing (ShaHash)
 import Utils
 
 -- | Checkouts commit with specified hash to particular directory
@@ -53,11 +54,12 @@ checkoutNewBranch name = do
 
 checkoutCommit :: ShaHash -> IO ShaHash
 checkoutCommit hash = do
-  commitFiles <- loadCommit $ commitsDir </> hash
-  hasObjects <- doesAllObjectsExist $ map getContentHash commitFiles
+  commitFiles <- loadCommitObjects $ commitsDir </> hash
+  hasObjects <- doesAllObjectsExist $ M.elems commitFiles
   if hasObjects
     then do
-      runConduit $ yieldMany commitFiles .| mapM_C (liftIO . restoreObject)
+      runConduit $
+        yieldMany (M.toList commitFiles) .| mapM_C (liftIO . restoreObject)
       restoreIndex commitFiles
       storeHeadCommit hash
       return hash
@@ -69,14 +71,12 @@ doesAllObjectsExist hashes = do
   return $ and filesExist
 
 -- | Reads and restores specified object
-restoreObject :: FileWithHash -> IO ()
-restoreObject obj = do
-  let path = getPath obj
-  let hash = getContentHash obj
+restoreObject :: (FilePath, ShaHash) -> IO ()
+restoreObject (path, hash) = do
   let targetPath = workingDir </> path
   content <- Lazy.readFile (objectsDir </> hash)
   createDirectoryIfMissing True (takeDirectory targetPath)
   Lazy.writeFile targetPath content
 
-restoreIndex :: [FileWithHash] -> IO ()
+restoreIndex :: M.Map FilePath ShaHash -> IO ()
 restoreIndex files = writeFile indexPath $ show files

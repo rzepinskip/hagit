@@ -7,6 +7,7 @@ module Hashing
   , bsToHex
   , ShaHash
   , FileWithHash(..)
+  , toFileWithHashTuple
   ) where
 
 import qualified Crypto.Hash.SHA1 as SHA1
@@ -21,6 +22,9 @@ data FileWithHash = FileWithHash
   { getPath :: FilePath
   , getContentHash :: ShaHash
   } deriving (Show, Read, Eq)
+
+toFileWithHashTuple :: FileWithHash -> (FilePath, ShaHash)
+toFileWithHashTuple file = (getPath file, getContentHash file)
 
 bsToHex :: Strict.ByteString -> String
 bsToHex bytes = concatMap (printf "%02x") (Strict.unpack bytes)

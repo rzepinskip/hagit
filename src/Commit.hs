@@ -1,13 +1,14 @@
 module Commit
   ( commitCommand
   , storeCommit
-  , loadCommit
+  , loadCommitObjects
   ) where
 
 import Data.Time (getCurrentTime)
 import System.FilePath ((</>))
 
 import Branch (readHeadCommit, storeHeadCommit)
+import qualified Data.Map as M
 import Hashing
 import Index (loadIndex)
 import Utils
@@ -27,25 +28,25 @@ execCommit msg = do
       putStrLn $ "Commit hash: " ++ commitHash
 
 -- | Stores commit on disc
-storeCommit :: String -> [FileWithHash] -> IO ShaHash
+storeCommit :: String -> M.Map FilePath ShaHash -> IO ShaHash
 storeCommit msg index = do
   commitHash <- storeCommitData msg index
   storeHeadCommit commitHash
   return commitHash
 
 -- | Stores commit information
-storeCommitData :: String -> [FileWithHash] -> IO ShaHash
+storeCommitData :: String -> M.Map FilePath ShaHash -> IO ShaHash
 storeCommitData msg index = do
   date <- getCurrentTime
   parentHash <- readHeadCommit
   let infoString = show $ CommitInfo msg (show date) parentHash
-  let filesHashes = map getContentHash index
+  let filesHashes = M.elems index
   let commitHash = bsToHex . hashString $ concat $ infoString : filesHashes
   writeFile (commitsDir </> commitHash) (infoString ++ "\n" ++ (show index))
   return commitHash
 
-loadCommit :: FilePath -> IO [FileWithHash]
-loadCommit path = do
+loadCommitObjects :: FilePath -> IO (M.Map FilePath ShaHash)
+loadCommitObjects path = do
   contents <- readFile path
   let line = lines contents !! 1
   return $ read line
