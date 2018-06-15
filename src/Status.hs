@@ -1,73 +1,99 @@
-module Status
-  ( statusCommand
-  ) where
+{-# LANGUAGE PatternSynonyms #-}
 
-import qualified Data.Map.Strict as Map
-import System.FilePath ((</>))
+{-|
+Module      : Status
+Description : Prints out the status of files - new/modified/deleted files in working directory/staging area/newest commit
+Copyright   : (c) Paweł Rzepiński 2018
+License     :  BSD 3
+Maintainer  : rzepinski.pawel@email.com
+Stability   : experimental
+Portability : POSIX
+-}
+module Status where
 
-import Hashing
+import Control.Monad (unless)
+import qualified Data.Map as M
+
+import Branch (readHeadCommit)
+import Commit (loadCommitObjects)
+import Hashing (hashFile)
+import Index (loadIndex)
 import Utils
 
--- | Prints status of current repository - new/modified/deleted files in comparison to latest commit
+-- | Prints out the status of files - new/modified/deleted files in working directory/staging area/newest commit
 statusCommand :: IO ()
-statusCommand = execIfStore execStatus
+statusCommand = executeIfInitialized execStatus
 
 execStatus :: IO ()
 execStatus = do
-  files <- readWorkingTree
-  filesWithHashes <- mapM toFileWithHash files
-  commitHead <- readCommitHead
-  putStrLn $ "Status: commit HEAD is: " ++ commitHead
-  let commitPath = commitsDir </> commitHead
-  commitedTree <- loadCommit commitPath
-  let cmpLines = compareTrees filesWithHashes commitedTree
-  putStrLn $
-    if not (null cmpLines)
-      then unlines cmpLines
-      else "No changes have been made since last commit."
+  files <- readDirectoryRec workingDir
+  workFiles <- mapM toFilePathWithHashTuple files
+  commitHead <- readHeadCommit
+  putStrLn $ "HEAD: " ++ commitHead
+  indexFiles <- loadIndex
+  headFile <- readHeadCommit
+  committedFiles <- loadCommitObjects headFile
+  compareFiles workFiles indexFiles committedFiles
 
-toFileWithHash :: FilePath -> IO FileWithHash
-toFileWithHash path = do
+toFilePathWithHashTuple :: FilePath -> IO (FilePath, ShaHash)
+toFilePathWithHashTuple path = do
   hash <- hashFile path
-  return $ FileWithHash path hash
+  return (path, hash)
 
-toFileWithHashTuple :: FileWithHash -> (FilePath, ObjectHash)
-toFileWithHashTuple file = (getPath file, getContentHash file)
-
-compareTrees :: [FileWithHash] -> [FileWithHash] -> [String]
-compareTrees current stored =
-  concatMap (\f -> f currentMap storedMap) cmpFunctions
+compareFiles ::
+     [(FilePath, ShaHash)]
+  -> M.Map FilePath ShaHash
+  -> M.Map FilePath ShaHash
+  -> IO ()
+compareFiles work index commitMap = do
+  printDiffs "\nChanges to be committed:\n" $ getDiffs index commitMap
+  let unstaged = getDiffs workMap index
+  printDiffs "\nChanges not staged for commit:\n" $
+    filter (not . isAddition) unstaged
+  printDiffs "\nUntracked files:\n" $ filter isAddition unstaged
   where
-    currentMap = Map.fromList (map toFileWithHashTuple current)
-    storedMap = Map.fromList (map toFileWithHashTuple stored)
-    cmpFunctions = [listNewFiles, listDeletedFiles, listChangedFiles]
+    workMap = M.fromList work
 
-listNewFiles ::
-     Map.Map FilePath ObjectHash -> Map.Map FilePath ObjectHash -> [String]
-listNewFiles = mapDifferencesInfo "new file created: "
+isAddition :: DiffOperation a -> Bool
+isAddition (Addition _) = True
+isAddition _ = False
 
-listDeletedFiles ::
-     Map.Map FilePath ObjectHash -> Map.Map FilePath ObjectHash -> [String]
-listDeletedFiles = flip $ mapDifferencesInfo "file deleted: "
-
-mapDifferencesInfo ::
-     String
-  -> Map.Map FilePath ObjectHash
-  -> Map.Map FilePath ObjectHash
-  -> [String]
-mapDifferencesInfo msg base other = map (\path -> msg ++ path) paths
+getDiffs ::
+     M.Map FilePath ShaHash
+  -> M.Map FilePath ShaHash
+  -> [DiffOperation FilePath]
+getDiffs a b =
+  (map (\path -> Addition path) added) ++
+  (map (\path -> Change path) modified) ++
+  (map (\path -> Deletion path) deleted)
   where
-    paths = map fst (Map.toList (Map.difference base other))
+    added = M.keys $ M.difference a b
+    modified =
+      M.keys $
+      M.differenceWith
+        handleEqualPaths
+        (M.intersection b a)
+        (M.intersection a b)
+    deleted = M.keys $ M.difference b a
 
-listChangedFiles ::
-     Map.Map FilePath ObjectHash -> Map.Map FilePath ObjectHash -> [String]
-listChangedFiles base other =
-  foldr
-    (\(path, same) xs ->
-       if same
-         then xs
-         else ("file changed: " ++ path) : xs)
-    []
-    changedList
-  where
-    changedList = Map.toList $ Map.intersectionWith (==) base other
+data DiffOperation a
+  = Addition a
+  | Change a
+  | Deletion a
+  deriving (Show, Read, Eq, Ord)
+
+printDiffs :: String -> [DiffOperation FilePath] -> IO ()
+printDiffs header diffs = do
+  unless (null diffs) $ putStrLn $ header
+  mapM_ printDiff diffs
+
+printDiff :: DiffOperation FilePath -> IO ()
+printDiff (Addition path) = putStrLn $ "\t added:" ++ path
+printDiff (Change path) = putStrLn $ "\t modified:" ++ path
+printDiff (Deletion path) = putStrLn $ "\t deleted:" ++ path
+
+handleEqualPaths :: ShaHash -> ShaHash -> Maybe ShaHash
+handleEqualPaths a b =
+  if a == b
+    then Nothing
+    else Just a

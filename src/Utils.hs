@@ -1,82 +1,81 @@
+{-|
+Module      : Utils
+Description : Utility functions - mostly directories handling.
+Copyright   : (c) Paweł Rzepiński 2018
+License     :  BSD 3
+Maintainer  : rzepinski.pawel@email.com
+Stability   : experimental
+Portability : POSIX
+-}
 module Utils
   ( workingDir
   , hagitDir
+  , refsDir
   , commitsDir
   , objectsDir
   , headPath
-  , readWorkingTree
+  , indexPath
+  , readDirectoryRec
   , printStoreDirError
-  , readCommitHead
-  , storeCommitHead
-  , execIfStore
-  , loadCommit
+  , executeIfInitialized
   , CommitInfo(..)
-  , ObjectHash
-  , FileWithHash(..)
+  , ShaHash
   ) where
 
 import Conduit ((.|), filterC, runConduitRes, sinkList, sourceDirectoryDeep)
 import Control.Monad (forM)
 import Data.List (isPrefixOf)
 import System.Directory (doesDirectoryExist, doesFileExist)
-import System.FilePath ((</>), combine)
-import System.IO (IOMode(..), hGetLine, hPutStrLn, withFile)
+import System.FilePath ((</>))
 
-import Hashing
+import Hashing (ShaHash)
 
+-- | Commit details
 data CommitInfo = CommitInfo
   { getMessage :: String
   , getDate :: String
-  , getHash :: String
-  , getParentHash :: String
+  , getParentHash :: ShaHash
   } deriving (Show, Read)
 
-data FileWithHash = FileWithHash
-  { getPath :: FilePath
-  , getContentHash :: ObjectHash
-  } deriving (Show, Read)
-
+-- | Returns working directory.
 workingDir :: FilePath
 workingDir = "."
 
+-- | Returns hagit directory.
 hagitDir :: FilePath
-hagitDir = combine workingDir ".hagit"
+hagitDir = workingDir </> ".hagit"
 
+-- | Returns references directory.
+refsDir :: FilePath
+refsDir = hagitDir </> "refs"
+
+-- | Returns commits directory.
 commitsDir :: FilePath
 commitsDir = hagitDir </> "commits"
 
+-- | Returns objects directory.
 objectsDir :: FilePath
 objectsDir = hagitDir </> "objects"
 
+-- | Returns path to HEAD file.
 headPath :: FilePath
 headPath = hagitDir </> "HEAD"
 
-readCommitHead :: IO String
-readCommitHead = do
-  fileExist <- doesFileExist headPath
-  if not fileExist
-    then return ""
-    else withFile headPath ReadMode hGetLine
+-- | Returns path to INDEX file. Also know as staging area.
+indexPath :: FilePath
+indexPath = hagitDir </> "INDEX"
 
--- | Updates the HEAD file with specified commit    
-storeCommitHead :: ObjectHash -> IO ()
-storeCommitHead hash = withFile headPath WriteMode (`hPutStrLn` hash)
-
-loadCommit :: FilePath -> IO [FileWithHash]
-loadCommit path = do
-  contents <- readFile path
-  let line = lines contents !! 1
-  return $ read line
-
-readWorkingTree :: IO [FilePath]
-readWorkingTree =
+-- | Recursively reads directory to retrieve all files.
+readDirectoryRec :: FilePath -> IO [FilePath]
+readDirectoryRec dir =
   runConduitRes $
-  sourceDirectoryDeep False workingDir .| filterC isValidPath .| sinkList
+  sourceDirectoryDeep False dir .| filterC isValidPath .| sinkList
 
 isValidPath :: FilePath -> Bool
 isValidPath path =
   not $ any (`isPrefixOf` path) ["./.hagit", "./.git", "./.stack-work"]
 
+-- | Prints out hagit directory errors.
 printStoreDirError :: IO ()
 printStoreDirError =
   putStrLn "Unable to perform operation: hagit directory (.hagit) not found."
@@ -88,8 +87,9 @@ hasStoreDir = do
   headExists <- doesFileExist $ hagitDir </> "HEAD"
   return (and $ headExists : dirsExist)
 
-execIfStore :: IO () -> IO ()
-execIfStore comp = do
+-- | Executes specified action only if hagit directory exists.
+executeIfInitialized :: IO () -> IO ()
+executeIfInitialized comp = do
   hagitEnabled <- hasStoreDir
   if hagitEnabled
     then comp

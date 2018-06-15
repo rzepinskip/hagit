@@ -1,60 +1,64 @@
+{-|
+Module      : Args
+Description : Handles command line arguments parsing
+Copyright   : (c) Paweł Rzepiński 2018
+License     :  BSD 3
+Maintainer  : rzepinski.pawel@email.com
+Stability   : experimental
+Portability : POSIX
+-}
 module Args
-  ( HvcArgsResult(..)
-  , HvcErrorType(..)
-  , HvcOperationType(..)
+  ( ArgsResult(..)
+  , ErrorType(..)
+  , OperationType(..)
   , parseArgs
   ) where
 
-import System.Directory
+import System.Directory (doesDirectoryExist, getPermissions, readable, writable)
 import Utils
 
-data HvcArgsResult
-  = HvcError HvcErrorType
-  | HvcOperation HvcOperationType
+-- | Result of parsing supplied arguments.
+data ArgsResult
+  = Error ErrorType
+  | Operation OperationType
 
-newtype HvcErrorType =
+-- | Encountered error type.
+newtype ErrorType =
   DirError String
 
-data HvcOperationType
+-- | Type of program command.
+data OperationType
   = Init
+  | IndexAdd FilePath
+  | IndexRemove FilePath
   | Commit String
-  | Help
   | Checkout String
+  | Diff [String]
+  | Branch
   | Log
   | Status
+  | Help
 
-strToSimpleOp :: String -> HvcOperationType
-strToSimpleOp "log" = Log
-strToSimpleOp "init" = Init
-strToSimpleOp "status" = Status
-strToSimpleOp _ = Help
+-- | Parses arguments supplied to program.
+parseArgs :: [String] -> IO ArgsResult
+parseArgs [] = return (Operation Help)
+parseArgs ["help"] = return (Operation Help)
+parseArgs [command] = validateCommand command []
+parseArgs [command, param] = validateCommand command [param]
+parseArgs manyParams = validateCommand (head manyParams) (tail manyParams)
 
-strToCompoundOp :: String -> String -> HvcOperationType
-strToCompoundOp "checkout" param = Checkout param
-strToCompoundOp "commit" param = Commit param
-strToCompoundOp _ _ = Help
-
-strToOp :: String -> Maybe String -> HvcOperationType
-strToOp command Nothing = strToSimpleOp command
-strToOp command (Just param) = strToCompoundOp command param
-
-validateCommand :: String -> Maybe String -> IO HvcArgsResult
-validateCommand command param =
+validateCommand :: String -> [String] -> IO ArgsResult
+validateCommand command params =
   case operation of
-    Help -> return (HvcOperation Help)
+    Help -> return (Operation Help)
     _ -> do
       valid <- validDir workingDir
       if valid
-        then return (HvcOperation operation)
-        else return (HvcError $ DirError "Invalid directory")
+        then return (Operation operation)
+        else return
+               (Error $ DirError "Wrong permissions in the working directory")
   where
-    operation = strToOp command param
-
-parseArgs :: [String] -> IO HvcArgsResult
-parseArgs ["help"] = return (HvcOperation Help)
-parseArgs [command] = validateCommand command Nothing
-parseArgs [command, param] = validateCommand command (Just param)
-parseArgs _ = return (HvcOperation Help)
+    operation = parseOp command params
 
 validDir :: FilePath -> IO Bool
 validDir fp = do
@@ -64,3 +68,27 @@ validDir fp = do
       permissions <- getPermissions fp
       return (readable permissions && writable permissions)
     else return False
+
+parseOp :: String -> [String] -> OperationType
+parseOp command [] = parseSimpleOp command
+parseOp command [param] = parseParamOp command param
+parseOp command params = parseMultipleParamsOp command params
+
+parseSimpleOp :: String -> OperationType
+parseSimpleOp "branch" = Branch
+parseSimpleOp "init" = Init
+parseSimpleOp "log" = Log
+parseSimpleOp "status" = Status
+parseSimpleOp _ = Help
+
+parseParamOp :: String -> String -> OperationType
+parseParamOp "add" param = IndexAdd param
+parseParamOp "checkout" param = Checkout param
+parseParamOp "commit" param = Commit param
+parseParamOp "diff" param = Diff [param]
+parseParamOp "remove" param = IndexRemove param
+parseParamOp _ _ = Help
+
+parseMultipleParamsOp :: String -> [String] -> OperationType
+parseMultipleParamsOp "diff" params = Diff params
+parseMultipleParamsOp _ _ = Help

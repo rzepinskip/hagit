@@ -1,0 +1,35 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><link rel="stylesheet" type="text/css" href="style.css" /><script type="text/javascript" src="highlight.js"></script></head><body><pre><span class="hs-comment">{-|
+Module      : Log
+Description : Initializes hagit repository in working directory
+Copyright   : (c) Pawe&#322; Rzepi&#324;ski 2018
+License     :  BSD 3
+Maintainer  : rzepinski.pawel@email.com
+Stability   : experimental
+Portability : POSIX
+-}</span><span>
+</span><a name="line-10"></a><span class="hs-keyword">module</span><span> </span><span class="hs-identifier">Init</span><span>
+</span><a name="line-11"></a><span>  </span><span class="hs-special">(</span><span> </span><a href="Init.html#initCommand"><span class="hs-identifier hs-var">initCommand</span></a><span>
+</span><a name="line-12"></a><span>  </span><span class="hs-special">)</span><span> </span><span class="hs-keyword">where</span><span>
+</span><a name="line-13"></a><span>
+</span><a name="line-14"></a><span class="hs-keyword">import</span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-identifier">Data</span><span class="hs-operator">.</span><span class="hs-identifier">Map</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="hs-identifier">M</span><span>
+</span><a name="line-15"></a><span class="hs-keyword">import</span><span> </span><span class="hs-identifier">System</span><span class="hs-operator">.</span><span class="hs-identifier">Directory</span><span> </span><span class="hs-special">(</span><span class="hs-identifier hs-var">createDirectoryIfMissing</span><span class="hs-special">,</span><span> </span><span class="hs-identifier hs-var">doesDirectoryExist</span><span class="hs-special">)</span><span>
+</span><a name="line-16"></a><span>
+</span><a name="line-17"></a><span class="hs-keyword">import</span><span> </span><a href="Branch.html"><span class="hs-identifier">Branch</span></a><span> </span><span class="hs-special">(</span><a href="Branch.html#initHead"><span class="hs-identifier hs-var">initHead</span></a><span class="hs-special">)</span><span>
+</span><a name="line-18"></a><span class="hs-keyword">import</span><span> </span><a href="Commit.html"><span class="hs-identifier">Commit</span></a><span> </span><span class="hs-special">(</span><a href="Commit.html#storeCommit"><span class="hs-identifier hs-var">storeCommit</span></a><span class="hs-special">)</span><span>
+</span><a name="line-19"></a><span class="hs-keyword">import</span><span> </span><a href="Utils.html"><span class="hs-identifier">Utils</span></a><span>
+</span><a name="line-20"></a><span>
+</span><a name="line-21"></a><span class="hs-comment">-- | Initializes hagit repository in working directory</span><span>
+</span><a name="line-22"></a><span class="hs-identifier">initCommand</span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-identifier hs-type">IO</span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span><span>
+</span><a name="line-23"></a><a name="initCommand"><a href="Init.html#initCommand"><span class="hs-identifier">initCommand</span></a></a><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
+</span><a name="line-24"></a><span>  </span><a name="local-6989586621679087633"><a href="#local-6989586621679087633"><span class="hs-identifier">exists</span></a></a><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="hs-identifier hs-var">doesDirectoryExist</span><span> </span><a href="Utils.html#hagitDir"><span class="hs-identifier hs-var">hagitDir</span></a><span>
+</span><a name="line-25"></a><span>  </span><span class="hs-keyword">if</span><span> </span><a href="#local-6989586621679087633"><span class="hs-identifier hs-var">exists</span></a><span>
+</span><a name="line-26"></a><span>    </span><span class="hs-keyword">then</span><span> </span><span class="hs-identifier hs-var">putStrLn</span><span> </span><span class="hs-string">&quot;Directory is already initialized.&quot;</span><span>
+</span><a name="line-27"></a><span>    </span><span class="hs-keyword">else</span><span> </span><span class="hs-keyword">do</span><span>
+</span><a name="line-28"></a><span>      </span><span class="hs-identifier hs-var">createDirectoryIfMissing</span><span> </span><span class="hs-identifier hs-var">True</span><span> </span><a href="Utils.html#refsDir"><span class="hs-identifier hs-var">refsDir</span></a><span>
+</span><a name="line-29"></a><span>      </span><span class="hs-identifier hs-var">createDirectoryIfMissing</span><span> </span><span class="hs-identifier hs-var">True</span><span> </span><a href="Utils.html#commitsDir"><span class="hs-identifier hs-var">commitsDir</span></a><span>
+</span><a name="line-30"></a><span>      </span><span class="hs-identifier hs-var">createDirectoryIfMissing</span><span> </span><span class="hs-identifier hs-var">True</span><span> </span><a href="Utils.html#objectsDir"><span class="hs-identifier hs-var">objectsDir</span></a><span>
+</span><a name="line-31"></a><span>      </span><span class="hs-identifier hs-var">writeFile</span><span> </span><a href="Utils.html#indexPath"><span class="hs-identifier hs-var">indexPath</span></a><span> </span><span class="hs-string">&quot;&quot;</span><span>
+</span><a name="line-32"></a><span>      </span><a href="Branch.html#initHead"><span class="hs-identifier hs-var">initHead</span></a><span>
+</span><a name="line-33"></a><span>      </span><span class="hs-identifier">_</span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><a href="Commit.html#storeCommit"><span class="hs-identifier hs-var">storeCommit</span></a><span> </span><span class="hs-string">&quot;Initial commit.&quot;</span><span> </span><span class="hs-identifier hs-var">M</span><span class="hs-operator hs-var">.</span><span class="hs-identifier hs-var">empty</span><span>
+</span><a name="line-34"></a><span>      </span><span class="hs-identifier hs-var">putStrLn</span><span> </span><span class="hs-string">&quot;Init: directory initialized.&quot;</span><span>
+</span><a name="line-35"></a></pre></body></html>
