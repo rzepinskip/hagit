@@ -1,5 +1,3 @@
-{-# LANGUAGE PatternSynonyms #-}
-
 {-|
 Module      : Status
 Description : Prints out the status of files - new/modified/deleted files in working directory/staging area/newest commit
@@ -9,9 +7,15 @@ Maintainer  : rzepinski.pawel@email.com
 Stability   : experimental
 Portability : POSIX
 -}
-module Status where
+{-# LANGUAGE PatternSynonyms #-}
+
+module Status
+  ( statusCommand
+  , compareFiles
+  ) where
 
 import Control.Monad (unless)
+import qualified Data.List as L (partition)
 import qualified Data.Map as M
 
 import Branch (readHeadCommit)
@@ -33,26 +37,39 @@ execStatus = do
   indexFiles <- loadIndex
   headFile <- readHeadCommit
   committedFiles <- loadCommitObjects headFile
-  compareFiles workFiles indexFiles committedFiles
+  printComparison workFiles indexFiles committedFiles
 
 toFilePathWithHashTuple :: FilePath -> IO (FilePath, ShaHash)
 toFilePathWithHashTuple path = do
   hash <- hashFile path
   return (path, hash)
 
-compareFiles ::
+printComparison ::
      [(FilePath, ShaHash)]
   -> M.Map FilePath ShaHash
   -> M.Map FilePath ShaHash
   -> IO ()
-compareFiles work index commitMap = do
-  printDiffs "\nChanges to be committed:\n" $ getDiffs index commitMap
-  let unstaged = getDiffs workMap index
-  printDiffs "\nChanges not staged for commit:\n" $
-    filter (not . isAddition) unstaged
-  printDiffs "\nUntracked files:\n" $ filter isAddition unstaged
+printComparison work indexMap commitMap = do
+  let (staged, unstaged, untracked) = compareFiles workMap indexMap commitMap
+  printDiffs "\nChanges to be committed:\n" staged
+  printDiffs "\nChanges not staged for commit:\n" unstaged
+  printDiffs "\nUntracked files:\n" untracked
   where
     workMap = M.fromList work
+
+-- | Compares work, index and commit files to detect staged, unstaged, untracked files.
+compareFiles ::
+     M.Map FilePath ShaHash
+  -> M.Map FilePath ShaHash
+  -> M.Map FilePath ShaHash
+  -> ( [DiffOperation FilePath]
+     , [DiffOperation FilePath]
+     , [DiffOperation FilePath])
+compareFiles workMap indexMap commitMap = (staged, unstaged, untracked)
+  where
+    staged = getDiffs indexMap commitMap
+    (unstaged, untracked) =
+      L.partition (not . isAddition) $ getDiffs workMap indexMap
 
 isAddition :: DiffOperation a -> Bool
 isAddition (Addition _) = True
