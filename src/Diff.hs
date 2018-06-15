@@ -27,7 +27,7 @@ import qualified System.IO.Strict as S (readFile)
 import Index (loadIndex)
 import Utils
 
--- | Displays differnce between file's current content and data in staging area.
+-- | Displays difference between file's current content and data in staging area.
 diffCommand :: [FilePath] -> IO ()
 diffCommand paths = executeIfInitialized $ execDiff paths
 
@@ -47,24 +47,20 @@ diffFile path = do
 
 -- | Merges content of second file into first one.
 mergeFileWith :: FilePath -> FilePath -> IO ()
-mergeFileWith current merged = do
-  newContent <- getFileDiffs current merged
-  writeFile current newContent
+mergeFileWith current merged = getFileDiffs current merged >>= writeFile current
 
 getFileDiffs :: FilePath -> FilePath -> IO String
 getFileDiffs current merged = do
   currentContent <- S.readFile current
   mergedContent <- S.readFile merged
-  let currentName = takeFileName current
-  let mergedName = takeFileName merged
   let lineDiffs =
         diffToLineRanges $
         getGroupedDiff (lines currentContent) (lines mergedContent)
-  let res =
-        intercalate
-          "\n"
-          (concatMap (concatDiffs currentName mergedName) lineDiffs)
-  return res
+  return $
+    intercalate "\n" (concatMap (concatDiffs currentName mergedName) lineDiffs)
+  where
+    currentName = takeFileName current
+    mergedName = takeFileName merged
 
 -- | Line number alias
 type LineNo = Int

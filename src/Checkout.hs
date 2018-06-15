@@ -44,9 +44,7 @@ isExistingCommit :: String -> IO Bool
 isExistingCommit name = doesFileExist $ commitsDir </> name
 
 isExistingBranch :: String -> IO Bool
-isExistingBranch name = do
-  branches <- listDirectory refsDir
-  return $ name `elem` branches
+isExistingBranch name = listDirectory refsDir >>= (return . elem name)
 
 checkoutBranch :: String -> IO ()
 checkoutBranch name = do
@@ -93,9 +91,7 @@ restoreOrMergeFile sourcePath targetPath = do
   exists <- doesFileExist targetPath
   if exists
     then mergeFileWith targetPath sourcePath
-    else do
-      content <- S.readFile sourcePath
-      writeFile targetPath content
+    else S.readFile sourcePath >>= writeFile targetPath
 
 restoreIndex :: M.Map FilePath ShaHash -> IO ()
 restoreIndex files = writeFile indexPath $ show files

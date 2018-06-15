@@ -44,10 +44,9 @@ initBranchName = "master"
 
 -- | Creates branch ref.
 createBranch :: BranchName -> ShaHash -> IO ()
-createBranch name hash = do
-  writeFile (refsDir </> name) hash
+createBranch name hash = writeFile (refsDir </> name) hash
 
--- |Initalizes HEAD file with master branch.
+-- |Initializes HEAD file with master branch.
 initHead :: IO ()
 initHead = do
   createBranch initBranchName ""

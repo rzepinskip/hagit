@@ -9,9 +9,7 @@ Maintainer  : rzepinski.pawel@email.com
 Stability   : experimental
 Portability : POSIX
 -}
-module Status
-  ( statusCommand
-  ) where
+module Status where
 
 import Control.Monad (unless)
 import qualified Data.Map as M

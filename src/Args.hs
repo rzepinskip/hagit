@@ -55,9 +55,10 @@ validateCommand command params =
       valid <- validDir workingDir
       if valid
         then return (Operation operation)
-        else return (Error $ DirError "Invalid directory")
+        else return
+               (Error $ DirError "Wrong permissions in the working directory")
   where
-    operation = strToOp command params
+    operation = parseOp command params
 
 validDir :: FilePath -> IO Bool
 validDir fp = do
@@ -68,26 +69,26 @@ validDir fp = do
       return (readable permissions && writable permissions)
     else return False
 
-strToOp :: String -> [String] -> OperationType
-strToOp command [] = strToSimpleOp command
-strToOp command [param] = strToParamOp command param
-strToOp command params = strToParamsOp command params
+parseOp :: String -> [String] -> OperationType
+parseOp command [] = parseSimpleOp command
+parseOp command [param] = parseParamOp command param
+parseOp command params = parseMultipleParamsOp command params
 
-strToSimpleOp :: String -> OperationType
-strToSimpleOp "log" = Log
-strToSimpleOp "init" = Init
-strToSimpleOp "status" = Status
-strToSimpleOp "branch" = Branch
-strToSimpleOp _ = Help
+parseSimpleOp :: String -> OperationType
+parseSimpleOp "branch" = Branch
+parseSimpleOp "init" = Init
+parseSimpleOp "log" = Log
+parseSimpleOp "status" = Status
+parseSimpleOp _ = Help
 
-strToParamOp :: String -> String -> OperationType
-strToParamOp "checkout" param = Checkout param
-strToParamOp "add" param = IndexAdd param
-strToParamOp "remove" param = IndexRemove param
-strToParamOp "commit" param = Commit param
-strToParamOp "diff" param = Diff [param]
-strToParamOp _ _ = Help
+parseParamOp :: String -> String -> OperationType
+parseParamOp "add" param = IndexAdd param
+parseParamOp "checkout" param = Checkout param
+parseParamOp "commit" param = Commit param
+parseParamOp "diff" param = Diff [param]
+parseParamOp "remove" param = IndexRemove param
+parseParamOp _ _ = Help
 
-strToParamsOp :: String -> [String] -> OperationType
-strToParamsOp "diff" params = Diff params
-strToParamsOp _ _ = Help
+parseMultipleParamsOp :: String -> [String] -> OperationType
+parseMultipleParamsOp "diff" params = Diff params
+parseMultipleParamsOp _ _ = Help

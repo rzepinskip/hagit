@@ -22,26 +22,23 @@ import Log
 import Status
 
 main :: IO ()
-main = do
-  args <- getArgs
-  action <- parseArgs args
-  runAction action
+main = getArgs >>= parseArgs >>= runAction
 
 runAction :: ArgsResult -> IO ()
 runAction (Error e) = printError e
 runAction (Operation op) = runOperation op
 
 runOperation :: OperationType -> IO ()
-runOperation Init = initCommand
+runOperation Branch = branchCommand
+runOperation (Checkout commit) = checkoutCommand commit
+runOperation (Commit msg) = commitCommand msg
+runOperation (Diff paths) = diffCommand paths
+runOperation Help = printHelp
 runOperation (IndexAdd path) = indexAddCommand path
 runOperation (IndexRemove path) = indexRemoveCommand path
-runOperation (Commit msg) = commitCommand msg
-runOperation (Checkout commit) = checkoutCommand commit
-runOperation (Diff paths) = diffCommand paths
-runOperation Branch = branchCommand
+runOperation Init = initCommand
 runOperation Log = logCommand
 runOperation Status = statusCommand
-runOperation Help = printHelp
 
 printError :: ErrorType -> IO ()
 printError _ = putStrLn "There was an error"
@@ -50,5 +47,5 @@ printHelp :: IO ()
 printHelp = do
   putStrLn "Usage: hagit <operation> [params]"
   putStrLn
-    "Valid operations are: init, commit, checkout, log, add, remove, status, branch, diff, help"
+    "Valid operations are: branch, checkout, commit, diff, help, add, remove, init, log, status"
   putStrLn "See README.md for more details."
