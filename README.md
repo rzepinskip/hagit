@@ -36,7 +36,15 @@ Valid commands are:
 - `status`: prints the current commit hash, and lists any new, deleted or modified in working tree, staging area and last commit.
 - `help`: displays help.
 
-## Used libraries
+## Tests
+
+Tests can be found in `tests` folder.
+
+## Documentation
+
+Tests can be found in `dist/docs` folder.
+
+## Libraries
 
 - `cryptohash`: SHA1 hashing for text objects
 - `bytestring`: handling byte strings - needed in compression
