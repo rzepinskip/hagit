@@ -4,7 +4,7 @@ A basic version control system written in Haskell based on the Git protocol.
 
 ## Installation
 
-In order to build `hagit`, [`stack`](http://docs.haskellstack.org/en/stable/README.html) must be installed.  Once that is done, build and test project:
+In order to build this project [`stack`](http://docs.haskellstack.org/en/stable/README.html) must be installed.  Once that is done, build and test project:
 ```bash
 $ stack setup
 $ stack build
@@ -43,7 +43,7 @@ Tests can be found in [tests](tests/src) folder.
 
 ## Documentation
 
-Documentation can be found in [docs](dist/docs) folder - [main page](dist/docs/index.html) .
+Documentation can be found in [docs](dist/docs) folder - [main page](dist/docs/index.html).
 
 ## Libraries
 
@@ -58,6 +58,6 @@ Documentation can be found in [docs](dist/docs) folder - [main page](dist/docs/i
 
 ## Attribution
 
-Initially based on [hvc](https://github.com/federicotdn/hvc)  by Federico T. 
+Initially based on [hvc](https://github.com/federicotdn/hvc) by Federico T. 
 
-Diff code adapted from [Data.Algorithm.DiffOutput](https://hub.darcs.net/sterlingclover/Diff/browse/src/Data/Algorithm/DiffOutput.hs) module ((c) Sterling Clover 2008-2011, Kevin Charter 2011 - available at 
+Diff code adapted from [Data.Algorithm.DiffOutput](https://hub.darcs.net/sterlingclover/Diff/browse/src/Data/Algorithm/DiffOutput.hs) module (Sterling Clover 2008-2011, Kevin Charter 2011)
