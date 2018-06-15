@@ -38,11 +38,11 @@ Valid commands are:
 
 ## Tests
 
-Tests can be found in `tests` folder.
+Tests can be found in [tests](tests/src) folder.
 
 ## Documentation
 
-Tests can be found in `dist/docs` folder.
+Documentation can be found in [docs](dist/docs) folder - open [docs page](dist/docs/index.html)  
 
 ## Libraries
 
